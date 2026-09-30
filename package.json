@@ -1,0 +1,17 @@
+{
+  "name": "multilingual-ocr-suite",
+  "private": true,
+  "workspaces": ["packages/ui", "packages/shared-types", "apps/business-card-web"],
+  "scripts": {
+    "dev:card": "npm run dev -w apps/business-card-web",
+    "build": "npm run build -w apps/business-card-web",
+    "typecheck": "npm run typecheck -w packages/ui && npm run typecheck -w apps/business-card-web",
+    "test": "npm run test -w packages/ui && npm run test -w apps/business-card-web",
+    "e2e": "playwright test -c tests/e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "typescript": "~5.9.0"
+  },
+  "engines": { "node": ">=20" }
+}

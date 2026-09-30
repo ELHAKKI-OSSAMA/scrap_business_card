@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocr-suite-core"
+version = "0.1.0"
+description = "Shared OCR, preprocessing, language detection, extraction and validation for the Multilingual OCR Suite"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.8",
+  "numpy>=1.26",
+  "opencv-contrib-python>=4.10",  # same distribution PaddleX pins (avoids two cv2 builds)
+  "Pillow>=10.4",
+  "phonenumbers>=8.13",
+  "email-validator>=2.2",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+paddle = ["paddleocr==3.3.3", "paddlepaddle==3.2.2"]
+tesseract = ["pytesseract>=0.3.13"]
+synthetic = ["arabic-reshaper>=3.0", "python-bidi>=0.6", "zxing-cpp>=2.3"]  # zxing-cpp: QR test fixtures only
+
+[tool.setuptools]
+package-dir = { "shared_types" = "shared-types/shared_types", "ocr_core" = "ocr-core/ocr_core", "language_detection" = "language-detection/language_detection", "document_preprocessing" = "document-preprocessing/document_preprocessing", "extraction" = "extraction/extraction", "validation" = "validation/validation" }
+packages = ["shared_types", "ocr_core", "language_detection", "document_preprocessing", "extraction", "validation"]

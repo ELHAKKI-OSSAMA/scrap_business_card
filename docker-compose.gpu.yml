@@ -1,0 +1,17 @@
+# GPU override: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build
+# Requires the NVIDIA driver + NVIDIA Container Toolkit. The CPU stack is unaffected when this
+# file is not used.
+services:
+  worker:
+    build: { context: ., dockerfile: infrastructure/docker/worker-gpu.Dockerfile }
+    image: ocr-suite/worker-gpu:${IMAGE_TAG:-latest}
+    environment:
+      OCR_DEVICE: gpu:0
+      OCR_DET_MODEL: ${OCR_DET_MODEL_GPU:-PP-OCRv5_server_det}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

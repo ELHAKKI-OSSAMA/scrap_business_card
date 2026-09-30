@@ -1,0 +1,18 @@
+# Development override: source mounted + auto-reload, internal ports published on localhost.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  postgres:
+    ports: ["127.0.0.1:5432:5432"]
+    networks: [backend, frontend]
+  redis:
+    ports: ["127.0.0.1:6379:6379"]
+    networks: [backend, frontend]
+  api:
+    # API code hot-reloads; changes under packages/ need `docker compose build` (installed into site-packages)
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/srv/apps/api/app"]
+    environment:
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+    volumes:
+      - ./apps/api/app:/srv/apps/api/app
+    ports: ["127.0.0.1:8000:8000"]

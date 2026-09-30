@@ -1,0 +1,29 @@
+{
+  "verified_by": null,
+  "verified_on": null,
+  "note": "Fill in by hand from the physical card. null = not printed on the card.",
+  "lines": [
+    {"side": "front", "lang": "fr", "text": "TYPE EACH PRINTED LINE EXACTLY"},
+    {"side": "front", "lang": "ar", "text": "..."}
+  ],
+  "fields": {
+    "full_name": null,
+    "honorific": null,
+    "arabic_name": null,
+    "job_title_printed": null,
+    "clinic_name_fr": null,
+    "clinic_name_ar": null,
+    "specialty_printed": null,
+    "professional_description": null,
+    "qualifications": [],
+    "phones": [],
+    "emails": [],
+    "website": null,
+    "address_line": null,
+    "street": null,
+    "building": null,
+    "postal_code": null,
+    "city": null,
+    "country": null
+  }
+}

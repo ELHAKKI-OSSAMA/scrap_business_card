@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "../../../packages/ui/src/styles.css";
+@source "../../../packages/ui/src";
+
+/* Business Card Intelligence: crisp corporate blue */
+:root {
+  --accent: #1f4fd8;
+  --accent-strong: #173fb0;
+  --accent-soft: #e3eafc;
+  --accent-ink: #1a3fa8;
+  --canvas: #f1f4f9;
+}
+:root.dark {
+  --accent: #6b8cff;
+  --accent-strong: #86a0ff;
+  --accent-soft: #1a2240;
+  --accent-ink: #a9bcff;
+  --accent-fg: #0b1020;
+  --canvas: #0d1017;
+}

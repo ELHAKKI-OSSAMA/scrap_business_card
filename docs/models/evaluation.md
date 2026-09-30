@@ -1,0 +1,96 @@
+# Evaluation
+
+> **Synthetic data only — not representative of real-world accuracy.**
+> All numbers come from computer-rendered business cards produced by
+> `ml/datasets/synthetic/generate.py`. They show that the pipeline works end to end and allow
+> comparing providers; they do **not** predict accuracy on real photographed cards.
+> Real photographs are evaluated separately with `tests/business_card/real_world/evaluate.py`
+> against a hand-verified ground truth.
+
+## Dataset
+
+108 synthetic business cards with ground-truth annotations:
+
+* Languages: Arabic, French, English and mixed ar/fr, ar/en, fr/en (3 cards per combination).
+* Quality variants per card: clean, faded, low_res, noisy, photo (perspective + lighting), rotated.
+
+Each sample's `annotation.json` carries `source: synthetic` and its licence.
+
+## Running
+
+```bash
+python ml/datasets/synthetic/generate.py                       # writes ml/datasets/synthetic/out
+python ml/evaluation/evaluate.py --provider paddleocr          # or --provider tesseract
+```
+
+Tesseract runs inside the container (it is installed there):
+
+```bash
+docker compose run --rm --no-deps -w /srv -v "$PWD/ml:/srv/ml" worker python ml/evaluation/evaluate.py --provider tesseract
+```
+
+Reports: `ml/evaluation/reports/synthetic-<provider>.{json,md}` — metrics by language, quality and
+field, confidence calibration, latency and memory.
+
+## Results (2026-09-30)
+
+PaddleOCR: Windows 11 host, CPU. Tesseract: Linux container, CPU. 108 cards, 0 failures each.
+
+### Text recognition
+
+| Subset | PaddleOCR CER | PaddleOCR line acc. | Tesseract CER | Tesseract line acc. |
+|---|---|---|---|---|
+| All | **0.0075** | 0.952 | 0.1745 | 0.685 |
+| Arabic | **0.0726** | 0.743 | 0.3237 | 0.549 |
+| French | **0.0004** | 0.993 | 0.1312 | 0.727 |
+| English | **0.0008** | 0.987 | 0.1763 | 0.732 |
+| Noisy images | 0.0089 | 0.952 | 0.3483 | 0.591 |
+
+Detection: PaddleOCR recall 0.999 / precision 0.999; Tesseract 0.868 / 0.407.
+
+### Fields (exact match)
+
+| Field | n | PaddleOCR | Tesseract |
+|---|---|---|---|
+| full_name | 108 | 1.0 | 0.778 |
+| first_name / last_name | 90 | 1.0 / 1.0 | 0.811 / 0.811 |
+| arabic_name | 54 | 0.963 | 0.704 |
+| job_title | 108 | 0.972 | 0.778 |
+| company | 108 | 0.907 | 0.565 |
+| industry | 108 | 0.991 | 0.815 |
+| website | 108 | 1.0 | 0.713 |
+| address.postal_code | 108 | 0.880 | 0.843 |
+| address.city | 90 | 1.0 | 0.900 |
+| address.country | 108 | 0.981 | 0.796 |
+| phone type | 216 / 148 | 1.0 | 0.993 |
+
+Entities: phones F1 1.0 (PaddleOCR) vs 0.811; e-mails F1 0.907 vs 0.628.
+
+### System
+
+| | PaddleOCR | Tesseract |
+|---|---|---|
+| Mean latency / image | 2.15 s* | 0.84 s |
+| p95 latency | 3.47 s* | 0.97 s |
+| Peak RSS | 1026 MB | 183 MB |
+
+\* measured while a Docker image build was running on the same machine; an earlier run without
+concurrent load measured ~1.1 s mean. `tests/business_card/benchmark.py` measures latency on an
+idle machine (≈1.0 s per card after warm-up).
+
+### Calibration
+
+PaddleOCR field confidences are under-confident (0.5–0.6 bucket: 99.4 % correct; 0.9–1.0:
+100 %). Thresholds for `needs_review` are therefore conservative.
+
+## Known weaknesses surfaced by evaluation
+
+* Arabic lines: 26 % not exact, mostly digit runs dropped by the Arabic recogniser
+  (mitigated by flags and reduced address confidence, not fixed).
+* Postal codes on Arabic-script lines (0.880).
+* Company names without a marker word (0.907).
+
+## What is still needed
+
+A real, licensed, consented evaluation set of photographed business cards (Arabic, French,
+English, mixed). Collecting or licensing such data is a decision for the project owner.

@@ -1,0 +1,67 @@
+/* Shared design tokens. Each app sets its own accent in its index.css (product branding). */
+@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-sans-arabic/400.css";
+@import "@fontsource/ibm-plex-sans-arabic/600.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter Variable", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-fg: var(--accent-fg);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-canvas: var(--canvas);
+}
+
+:root {
+  --ink: #16181d;
+  --ink-2: #4a5160;
+  --ink-3: #7b8394;
+  --line: #e2e5ea;
+  --surface: #ffffff;
+  --surface-2: #f5f6f8;
+  --canvas: #f0f2f5;
+  --accent-fg: #ffffff;
+  color-scheme: light;
+}
+
+:root.dark {
+  --ink: #eceef2;
+  --ink-2: #b4bac6;
+  --ink-3: #858c9a;
+  --line: #2c313b;
+  --surface: #171a20;
+  --surface-2: #1f232b;
+  --canvas: #0f1115;
+  color-scheme: dark;
+}
+
+html { background: var(--canvas); color: var(--ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+/* Arabic reads better with a slightly larger line height and its own face first */
+:lang(ar) body, [lang="ar"] { font-family: "IBM Plex Sans Arabic", "Inter Variable", system-ui, sans-serif; line-height: 1.7; }
+.ocr-text { unicode-bidi: plaintext; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@layer components {
+  .input {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+  .input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  textarea.input { resize: vertical; }
+}

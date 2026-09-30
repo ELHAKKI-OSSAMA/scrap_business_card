@@ -1,0 +1,103 @@
+{
+  "@@locale": "en",
+  "appTitle": "Business Card Scanner",
+  "cardScanner": "Business Card Scanner",
+  "newScan": "New scan",
+  "front": "Front",
+  "back": "Back",
+  "optional": "optional",
+  "scanDocument": "Scan (auto-crop)",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "crop": "Crop & rotate",
+  "retake": "Retake",
+  "remove": "Remove",
+  "saveDraft": "Save draft",
+  "submit": "Save & process",
+  "title": "Title (optional)",
+  "search": "Search drafts…",
+  "noDrafts": "No scans yet. Tap + to capture a document.",
+  "statusLocalDraft": "Local draft",
+  "statusPendingUpload": "Pending upload",
+  "statusProcessing": "Processing",
+  "statusCompleted": "Completed",
+  "statusFailed": "Failed",
+  "offlineBanner": "Offline — drafts are saved on this device and uploaded when the connection returns. OCR runs on the server.",
+  "syncNow": "Sync now",
+  "syncing": "Syncing…",
+  "settings": "Settings",
+  "language": "Language",
+  "server": "Server URL",
+  "signIn": "Sign in",
+  "signOut": "Sign out",
+  "email": "E-mail",
+  "password": "Password",
+  "register": "Create account",
+  "signedInAs": "Signed in as {email}",
+  "@signedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "notSignedIn": "Not signed in. Drafts stay on this device until you sign in.",
+  "needImage": "Add at least the front image.",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this draft and its images from the device?",
+  "cancel": "Cancel",
+  "extracted": "Extracted fields",
+  "ocrText": "Recognised text",
+  "notFound": "Not found",
+  "needsReview": "Needs review",
+  "confidence": "Confidence {value}%",
+  "@confidence": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "edit": "Edit",
+  "save": "Save",
+  "retry": "Retry",
+  "uploadProgress": "Uploading {percent}%",
+  "@uploadProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "errorGeneric": "Something went wrong.",
+  "errorNetwork": "Cannot reach the server.",
+  "errorAuth": "Incorrect e-mail or password.",
+  "fullName": "Full name",
+  "arabicName": "Arabic name",
+  "jobTitle": "Job title",
+  "company": "Company",
+  "phones": "Phones",
+  "emails": "E-mail",
+  "website": "Website",
+  "address": "Address",
+  "offlineOcrNote": "This app does not run OCR on the device: recognition happens after upload.",
+  "lastError": "Last error: {message}",
+  "@lastError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "specialty": "Specialty",
+  "professionalDescription": "Professional description",
+  "qrDiffers": "The QR code differs from the printed card for: {fields}. Nothing was changed automatically.",
+  "inferredNote": "Inferred, not printed on the card — please confirm",
+  "@qrDiffers": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  }
+}

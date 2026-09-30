@@ -1,0 +1,18 @@
+.env
+.venv/
+node_modules/
+dist/
+data/
+test-results/
+__pycache__/
+*.db
+.pytest_cache/
+ml/datasets/synthetic/out/
+ml/evaluation/reports/*.json
+certs/
+apps/mobile/build/
+apps/mobile/.dart_tool/
+
+# real-world validation photos / annotations (personal data)
+tests/business_card/real_world/*/
+*.egg-info/
