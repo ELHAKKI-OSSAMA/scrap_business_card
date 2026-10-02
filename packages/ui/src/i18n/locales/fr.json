@@ -12,7 +12,9 @@
     "settings": "Paramètres",
     "logout": "Se déconnecter",
     "skip": "Aller au contenu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "android": "Application Android",
+    "androidHint": "Télécharger l’application Android"
   },
   "common": {
     "save": "Enregistrer",
@@ -60,7 +62,8 @@
     "haveAccount": "Vous avez déjà un compte ?",
     "passwordHint": "Au moins 10 caractères.",
     "welcome": "Bon retour",
-    "create": "Créez votre espace de travail"
+    "create": "Créez votre espace de travail",
+    "registrationClosed": "Les inscriptions sont fermées. Demandez un compte à l’administrateur."
   },
   "status": {
     "draft": "Brouillon",
@@ -214,7 +217,11 @@
     "unavailable": "indisponible",
     "capabilities": "Capacités vérifiées",
     "privacy": "Confidentialité",
-    "privacyText": "Les images et le texte sont traités sur ce serveur. Aucun service d'IA externe n'est utilisé sauf activation par un administrateur."
+    "privacyText": "Les images et le texte sont traités sur ce serveur. Aucun service d'IA externe n'est utilisé sauf activation par un administrateur.",
+    "androidTitle": "Application Android",
+    "androidUrl": "Lien de téléchargement (https)",
+    "androidHint": "Affiché dans le bouton « Application Android » en haut de page. Laissez vide pour utiliser le lien par défaut du serveur.",
+    "ownerOnly": "Seul le propriétaire de l’espace peut modifier ce lien."
   },
   "lang": {
     "en": "English",
@@ -250,7 +257,8 @@
     "translation_not_configured": "La traduction automatique n'est pas configurée.",
     "unauthorized": "Veuillez vous reconnecter.",
     "generic": "Une erreur s'est produite.",
-    "confirmation_required": "Veuillez confirmer cette action."
+    "confirmation_required": "Veuillez confirmer cette action.",
+    "registration_disabled": "Les inscriptions sont fermées."
   },
   "empty": {
     "title": "Rien pour l'instant",

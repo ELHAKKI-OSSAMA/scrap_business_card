@@ -51,6 +51,11 @@ class MeOut(BaseModel):
     workspace_id: uuid.UUID
     workspace_name: str
     role: str
+    android_app_url: str | None = None  # effective link: workspace setting, else server default
+
+
+class WorkspaceSettingsIn(BaseModel):
+    android_app_url: str | None = Field(default=None, max_length=500, description="https link to the Android app (APK or store page); empty = server default")
 
 
 class MeUpdate(BaseModel):

@@ -107,3 +107,20 @@ def test_openapi_documents_business_cards(client):
             assert f"/api/v1/{route}{suffix}" in paths
     for p in ("/api/v1/health", "/api/v1/health/ready", "/api/v1/models", "/api/v1/jobs/{job_id}", "/api/v1/me"):
         assert p in paths
+
+
+def test_android_link_setting(client, alice):
+    h = alice["headers"]
+    assert client.get("/api/v1/me", headers=h).json()["android_app_url"] is None
+    r = client.patch("/api/v1/workspace/settings", json={"android_app_url": "http://insecure.example/app.apk"}, headers=h)
+    assert r.status_code == 422
+    r = client.patch("/api/v1/workspace/settings", json={"android_app_url": "javascript:alert(1)"}, headers=h)
+    assert r.status_code == 422
+    url = "https://example.com/BusinessCardScanner.apk"
+    assert client.patch("/api/v1/workspace/settings", json={"android_app_url": url}, headers=h).json()["android_app_url"] == url
+    assert client.get("/api/v1/me", headers=h).json()["android_app_url"] == url
+    assert client.patch("/api/v1/workspace/settings", json={"android_app_url": ""}, headers=h).json()["android_app_url"] is None
+
+
+def test_auth_config_reports_registration(client):
+    assert client.get("/api/v1/auth/config").json() == {"registration_open": True}

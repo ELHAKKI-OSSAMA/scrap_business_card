@@ -10,7 +10,8 @@ from app.deps import Principal, audit, client_ip, get_principal
 from app.errors import ApiError
 from app.models import Membership, User, Workspace
 from app.ratelimit import check_rate
-from app.schemas import ErrorResponse, LoginIn, MeOut, MeUpdate, RefreshIn, RegisterIn, TokenOut
+from app.schemas import ErrorResponse, LoginIn, MeOut, MeUpdate, RefreshIn, RegisterIn, TokenOut, WorkspaceSettingsIn
+from validation.contact import is_safe_url
 from app.security import create_access_token, hash_password, issue_refresh_token, revoke_refresh_family, rotate_refresh_token, verify_dummy, verify_password
 
 router = APIRouter(tags=["auth"], responses={401: {"model": ErrorResponse}, 429: {"model": ErrorResponse}})
@@ -30,6 +31,11 @@ def _tokens(db: Session, user: User, refresh: str | None = None) -> TokenOut:
         refresh = issue_refresh_token(db, user)
         db.commit()
     return TokenOut(access_token=access, refresh_token=refresh, expires_in=ttl)
+
+
+@router.get("/auth/config", summary="Public sign-in options (is self-registration open?)")
+def auth_config():
+    return {"registration_open": bool(get_settings().allow_registration)}
 
 
 @router.post("/auth/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED, summary="Create an account and a personal workspace")
@@ -83,10 +89,37 @@ def logout(body: RefreshIn, db: Session = Depends(get_db)):
     revoke_refresh_family(db, body.refresh_token)
 
 
+def _android_url(ws: Workspace) -> str | None:
+    return (ws.settings or {}).get("android_app_url") or get_settings().android_app_url or None
+
+
+def _me_out(user: User, p: Principal) -> MeOut:
+    return MeOut(id=user.id, email=user.email, display_name=user.display_name, locale=user.locale, default_phone_region=user.default_phone_region,
+                 workspace_id=p.workspace.id, workspace_name=p.workspace.name, role=p.role, android_app_url=_android_url(p.workspace))
+
+
 @router.get("/me", response_model=MeOut, summary="Current user and workspace")
 def me(p: Principal = Depends(get_principal)):
-    return MeOut(id=p.user.id, email=p.user.email, display_name=p.user.display_name, locale=p.user.locale, default_phone_region=p.user.default_phone_region,
-                 workspace_id=p.workspace.id, workspace_name=p.workspace.name, role=p.role)
+    return _me_out(p.user, p)
+
+
+@router.patch("/workspace/settings", response_model=MeOut, summary="Workspace settings (owner only): Android app link")
+def update_workspace_settings(body: WorkspaceSettingsIn, p: Principal = Depends(get_principal), db: Session = Depends(get_db)):
+    if p.role != "owner":
+        raise ApiError(403, "forbidden", "Only the workspace owner can change these settings.")
+    ws = db.get(Workspace, p.workspace.id)
+    settings = dict(ws.settings or {})
+    raw = (body.android_app_url or "").strip()
+    if raw:
+        if not raw.lower().startswith("https://") or not is_safe_url(raw):
+            raise ApiError(422, "invalid_url", "Use a valid https:// link.")
+        settings["android_app_url"] = raw
+    else:
+        settings.pop("android_app_url", None)
+    ws.settings = settings
+    db.commit()
+    p.workspace = ws
+    return _me_out(p.user, p)
 
 
 @router.patch("/me", response_model=MeOut, summary="Update profile preferences")
@@ -95,5 +128,4 @@ def update_me(body: MeUpdate, p: Principal = Depends(get_principal), db: Session
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(user, k, v)
     db.commit()
-    return MeOut(id=user.id, email=user.email, display_name=user.display_name, locale=user.locale, default_phone_region=user.default_phone_region,
-                 workspace_id=p.workspace.id, workspace_name=p.workspace.name, role=p.role)
+    return _me_out(user, p)

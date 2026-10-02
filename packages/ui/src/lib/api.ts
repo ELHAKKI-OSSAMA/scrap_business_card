@@ -158,7 +158,9 @@ export const accountApi = {
     auth.clear();
   },
   me: () => json<Me>("/me"),
+  authConfig: () => json<{ registration_open: boolean }>("/auth/config"),
   updateMe: (body: Partial<Pick<Me, "display_name" | "locale" | "default_phone_region">>) => json<Me>("/me", { method: "PATCH", body: JSON.stringify(body) }),
+  updateWorkspaceSettings: (body: { android_app_url: string | null }) => json<Me>("/workspace/settings", { method: "PATCH", body: JSON.stringify(body) }),
   job: (id: string) => json<Job>(`/jobs/${id}`),
   models: () => json<Record<string, unknown>>("/models"),
   translate: (text: string, target: string) => json<{ translated_text: string; machine_generated: boolean; provider: string }>("/translate", { method: "POST", body: JSON.stringify({ text, target, source: "auto" }) }),

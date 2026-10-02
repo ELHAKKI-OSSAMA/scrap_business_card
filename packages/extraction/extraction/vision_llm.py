@@ -49,6 +49,8 @@ Rules:
 - Phone type: "mobile" (Mob, GSM, Portable, Cell), "phone" (Tél, Tel, Fixe), "fax", "whatsapp", or
   "unknown". A number printed without a label directly under a labelled one has the same type.
 - Address: split into parts; a part that is not printed is null. Never infer the country.
+  building = building / site / floor only; postal_code = the postal code exactly as printed
+  (it may contain a space, e.g. "16 428"); street = street name and number.
 - Unknown or absent values are null (lists: []).
 Answer with ONE JSON object and nothing else, exactly with these keys:
 {"full_name": str|null, "first_name": str|null, "last_name": str|null, "job_title": str|null,
@@ -150,6 +152,31 @@ def _digits(s: str) -> str:
     return re.sub(r"\D", "", s)
 
 
+def _covered(v: str, joined: str, line_texts: list[str], max_pieces: int = 3) -> bool:
+    """True when ``v`` occurs in the OCR text, or is entirely made of at most ``max_pieces``
+    fragments of OCR lines (a value printed across lines that are not adjacent in reading order,
+    e.g. "Technopark Casablanca" + "5e étg.- 16 428"). No word may come from outside the OCR."""
+    if not v:
+        return False
+    if v in joined:
+        return True
+    rest, pieces = v, 0
+    while rest:
+        best = 0
+        for t in line_texts:
+            n = len(rest)
+            while n > best and rest[:n] not in t:
+                n -= 1
+            best = max(best, n)
+        if best < 3:
+            return False
+        rest = rest[best:].lstrip(" ,;-–")
+        pieces += 1
+        if pieces > max_pieces:
+            return False
+    return True
+
+
 def _lines_for(value: str, lines: list[OcrLine]) -> list[OcrLine]:
     v = normalize_search(value)
     return [l for l in lines if (n := normalize_search(l.text)) and (n in v or v in n)]
@@ -173,7 +200,8 @@ def merge_vision(extraction: BusinessCardExtraction, card: VisionCard, lines: li
     res = extraction.model_copy(deep=True)
     ocr_text = normalize_search(" ".join(l.text for l in lines))
     ocr_digits = _digits(" ".join(l.text for l in lines))
-    grounded = lambda v: bool(v and normalize_search(v) and normalize_search(v) in ocr_text)  # noqa: E731
+    line_texts = [normalize_search(l.text) for l in lines]
+    grounded = lambda v: _covered(normalize_search(v or ""), ocr_text, line_texts)  # noqa: E731
     changed = 0
 
     from extraction.common import strip_honorific

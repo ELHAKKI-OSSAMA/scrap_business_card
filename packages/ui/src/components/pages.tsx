@@ -8,7 +8,7 @@ import { accountApi, productApi, type ProductRoute } from "../lib/api";
 import { formatDate, formatDateTime, formatNumber, uuid } from "../lib/format";
 import { useDocument, useErrorMessage } from "../lib/hooks";
 import { Alert, Bidi, Button, Card, ConfirmDialog, EmptyState, ReviewBadge, Spinner, StatusBadge, cx, useToast } from "./primitives";
-import { LanguageSelector as LanguageSelectorProxy, ThemeToggle as ThemeToggleProxy } from "./shell";
+import { AndroidIcon, LanguageSelector as LanguageSelectorProxy, ThemeToggle as ThemeToggleProxy } from "./shell";
 import { ExportMenu, HistoryPanel, JobDetails, OcrTextPanel, ProcessPanel, WarningList, type FieldActions } from "./review";
 import { UploadSlot } from "./upload";
 import { ImageViewer } from "./viewer";
@@ -416,6 +416,16 @@ export function SettingsPage() {
       toast("success", t("fields.saved"));
     } catch (e) { toast("danger", errMsg(e)); }
   };
+  const [android, setAndroid] = useState("");
+  useEffect(() => { setAndroid(me.data?.android_app_url ?? ""); }, [me.data]);
+  const saveAndroid = async () => {
+    try {
+      const r = await accountApi.updateWorkspaceSettings({ android_app_url: android.trim() || null });
+      qc.setQueryData(["me"], r);
+      toast("success", t("fields.saved"));
+    } catch (e) { toast("danger", errMsg(e)); }
+  };
+  const isOwner = me.data?.role === "owner";
   const ocr = (models.data?.ocr as { provider: string; available: boolean; reason: string | null; models: { task: string; name: string; version: string | null }[] }[] | undefined) ?? [];
   const caps = (models.data?.capabilities as Record<string, string> | undefined) ?? {};
   return (
@@ -433,6 +443,15 @@ export function SettingsPage() {
           <span id="region-hint" className="text-xs text-ink-3">{t("settings.phoneRegionHint")}</span>
         </label>
         <div><Button variant="primary" onClick={save}>{t("common.save")}</Button></div>
+      </Card>
+      <Card className="flex flex-col gap-3 p-5">
+        <h2 className="flex items-center gap-2 font-semibold"><AndroidIcon className="size-5 text-[#3DDC84]" />{t("settings.androidTitle")}</h2>
+        <label className="flex flex-col gap-1 text-sm">{t("settings.androidUrl")}
+          <input className="input" type="url" dir="ltr" inputMode="url" value={android} disabled={!isOwner}
+            onChange={(e) => setAndroid(e.target.value)} placeholder="https://…/BusinessCardScanner.apk" aria-describedby="android-hint" />
+          <span id="android-hint" className="text-xs text-ink-3">{isOwner ? t("settings.androidHint") : t("settings.ownerOnly")}</span>
+        </label>
+        {isOwner && <div><Button variant="primary" onClick={saveAndroid}>{t("common.save")}</Button></div>}
       </Card>
       <Card className="flex flex-col gap-3 p-5">
         <h2 className="font-semibold">{t("settings.models")}</h2>

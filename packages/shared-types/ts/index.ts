@@ -213,6 +213,6 @@ export interface ReviewEvent { id: string; action: string; path: string | null; 
 
 export interface Duplicate { document: DocumentSummary; matched_keys: string[]; score: number }
 
-export interface Me { id: string; email: string; display_name: string | null; locale: Lang; default_phone_region: string | null; workspace_id: string; workspace_name: string; role: string }
+export interface Me { id: string; email: string; display_name: string | null; locale: Lang; default_phone_region: string | null; workspace_id: string; workspace_name: string; role: string; android_app_url: string | null }
 
 export interface ApiErrorBody { error: { code: string; message: string; details: Record<string, unknown>; request_id: string | null } }

@@ -36,6 +36,7 @@ class Workspace(Base):
     name: Mapped[str] = mapped_column(String(120))
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    settings: Mapped[dict | None] = mapped_column(JsonType, nullable=True)  # e.g. {"android_app_url": "https://…"}
 
 
 class Membership(Base):

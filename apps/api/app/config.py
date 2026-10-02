@@ -92,6 +92,8 @@ class Settings(BaseSettings):
     metrics_enabled: bool = True
     # Vercel Cron sends "Authorization: Bearer $CRON_SECRET" to /api/v1/internal/retention
     cron_secret: str | None = None
+    # default "Android app" link in the web app; each workspace owner can override it in Settings
+    android_app_url: str | None = None
 
     @field_validator("cors_origins", mode="before")
     @classmethod

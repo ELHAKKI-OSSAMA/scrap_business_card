@@ -12,7 +12,9 @@
     "settings": "Settings",
     "logout": "Sign out",
     "skip": "Skip to content",
-    "menu": "Menu"
+    "menu": "Menu",
+    "android": "Android app",
+    "androidHint": "Download the Android app"
   },
   "common": {
     "save": "Save",
@@ -60,7 +62,8 @@
     "haveAccount": "Already have an account?",
     "passwordHint": "At least 10 characters.",
     "welcome": "Welcome back",
-    "create": "Create your workspace"
+    "create": "Create your workspace",
+    "registrationClosed": "Sign-up is closed. Ask the administrator for an account."
   },
   "status": {
     "draft": "Draft",
@@ -214,7 +217,11 @@
     "unavailable": "unavailable",
     "capabilities": "Verified capabilities",
     "privacy": "Privacy",
-    "privacyText": "Images and text are processed on this server. No external AI service is used unless an administrator enables one."
+    "privacyText": "Images and text are processed on this server. No external AI service is used unless an administrator enables one.",
+    "androidTitle": "Android app",
+    "androidUrl": "Download link (https)",
+    "androidHint": "Shown as the “Android app” button in the header. Leave empty to use the server default.",
+    "ownerOnly": "Only the workspace owner can change this link."
   },
   "lang": {
     "en": "English",
@@ -250,7 +257,8 @@
     "translation_not_configured": "Machine translation is not configured.",
     "unauthorized": "Please sign in again.",
     "generic": "Something went wrong.",
-    "confirmation_required": "Please confirm this action."
+    "confirmation_required": "Please confirm this action.",
+    "registration_disabled": "Self-registration is disabled."
   },
   "empty": {
     "title": "Nothing here yet",

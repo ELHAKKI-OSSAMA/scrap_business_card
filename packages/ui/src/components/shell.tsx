@@ -55,6 +55,29 @@ export function ThemeToggle() {
   );
 }
 
+/** Android robot head (brand-neutral glyph). */
+export function AndroidIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.15c-1.77 0-3.43.38-4.92 1L5.22 5.92a.38.38 0 1 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z" />
+    </svg>
+  );
+}
+
+/** "Android app" link; hidden until a link is configured (server default or Settings). */
+function AndroidLink({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  const me = useQuery({ queryKey: ["me"], queryFn: accountApi.me, staleTime: 60_000 });
+  const url = me.data?.android_app_url;
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" title={t("nav.androidHint")}
+      className={cx("inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-sm font-medium text-ink hover:bg-surface-2", className)}>
+      <AndroidIcon className="size-4 text-[#3DDC84]" />{t("nav.android")}
+    </a>
+  );
+}
+
 export function AppShell({ brand, children }: { brand: ProductBrand; children: ReactNode }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -83,6 +106,7 @@ export function AppShell({ brand, children }: { brand: ProductBrand; children: R
             ))}
           </nav>
           <div className="ms-auto hidden items-center gap-3 md:flex">
+            <AndroidLink />
             <LanguageSelector compact />
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={async () => { await accountApi.logout(); qc.clear(); }}><LogOut className="size-4 rtl:-scale-x-100" aria-hidden />{t("nav.logout")}</Button>
@@ -97,6 +121,7 @@ export function AppShell({ brand, children }: { brand: ProductBrand; children: R
               ))}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3">
+              <AndroidLink />
               <LanguageSelector />
               <ThemeToggle />
               <Button variant="ghost" size="sm" onClick={async () => { await accountApi.logout(); qc.clear(); }}>{t("nav.logout")}</Button>
@@ -137,6 +162,8 @@ export function LoginScreen({ brand }: { brand: ProductBrand }) {
   const { t, i18n } = useTranslation();
   const errMsg = useErrorMessage();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const cfg = useQuery({ queryKey: ["auth-config"], queryFn: accountApi.authConfig, staleTime: 300_000 });
+  const canRegister = cfg.data?.registration_open !== false;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -181,12 +208,13 @@ export function LoginScreen({ brand }: { brand: ProductBrand }) {
             {error && <Alert tone="danger">{error}</Alert>}
             <Button type="submit" variant="primary" loading={busy}>{mode === "signin" ? t("auth.signin") : t("auth.signup")}</Button>
           </form>
-          <p className="mt-4 text-center text-sm text-ink-2">
+          {(canRegister || mode === "signup") && <p className="mt-4 text-center text-sm text-ink-2">
             {mode === "signin" ? t("auth.noAccount") : t("auth.haveAccount")}{" "}
             <button className="font-medium text-accent-ink underline" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}>
               {mode === "signin" ? t("auth.signup") : t("auth.signin")}
             </button>
-          </p>
+          </p>}
+          {!canRegister && <p className="mt-4 text-center text-xs text-ink-3">{t("auth.registrationClosed")}</p>}
         </Card>
         <div className="mt-4 flex items-center justify-center gap-3"><LanguageSelector /><ThemeToggle /></div>
       </div>
