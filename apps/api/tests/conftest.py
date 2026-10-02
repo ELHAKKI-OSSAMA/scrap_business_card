@@ -22,6 +22,9 @@ os.environ.update(
         "RATE_LIMIT_UPLOAD_PER_MINUTE": "1000",
         "OCR_USE_ORIENTATION_MODEL": "false",
         "DISABLE_MODEL_SOURCE_CHECK": "True",
+        # never call an external LLM from tests, whatever the developer's .env says
+        "LLM_PROVIDER": "none",
+        "OLLAMA_KEYS": "",
     }
 )
 

@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from document_preprocessing import detect_color_patches
 from extraction.common import (
     address_score,
     all_lines,
@@ -280,6 +279,11 @@ def _logo_candidate(pages: list[OcrPage], images: dict[Side, np.ndarray] | None)
             continue
         # 1–2 character "lines" inside a graphic are usually the OCR reading the logo itself
         text_boxes = [l.bbox for l in page.lines if len(re.sub(r"\W", "", l.text)) > 2]
+        try:
+            from document_preprocessing import detect_color_patches  # needs OpenCV
+        except ImportError:  # cloud-only deployment (no OpenCV): no logo candidate
+            return None
+
         for i, (box, score) in enumerate(detect_color_patches(img, min_area_ratio=0.003, max_area_ratio=0.2)):
             overlap = any(not (b.x2 < box.x or b.x > box.x2 or b.y2 < box.y or b.y > box.y2) and (b.w * b.h) > 0.5 * box.w * box.h for b in text_boxes)
             if overlap:

@@ -68,11 +68,14 @@ class LocalStorage:
 class S3Storage:
     name = "s3"
 
-    def __init__(self, bucket: str, endpoint_url: str | None, region: str, access_key: str | None, secret_key: str | None):
+    def __init__(self, bucket: str, endpoint_url: str | None, region: str, access_key: str | None, secret_key: str | None, *, sse: str | None = "AES256", path_style: bool = False):
         import boto3
+        from botocore.config import Config
 
         self.bucket = bucket
-        self.client = boto3.client("s3", endpoint_url=endpoint_url, region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+        self.sse = sse or None
+        cfg = Config(s3={"addressing_style": "path"}) if path_style else None
+        self.client = boto3.client("s3", endpoint_url=endpoint_url, region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_key, config=cfg)
 
     def ensure_bucket(self) -> None:
         from botocore.exceptions import ClientError
@@ -83,7 +86,8 @@ class S3Storage:
             self.client.create_bucket(Bucket=self.bucket)
 
     def put(self, key: str, data: bytes, content_type: str) -> None:
-        self.client.put_object(Bucket=self.bucket, Key=_check_key(key), Body=data, ContentType=content_type, ServerSideEncryption="AES256")
+        extra = {"ServerSideEncryption": self.sse} if self.sse else {}
+        self.client.put_object(Bucket=self.bucket, Key=_check_key(key), Body=data, ContentType=content_type, **extra)
 
     def get(self, key: str) -> bytes:
         return self.client.get_object(Bucket=self.bucket, Key=_check_key(key))["Body"].read()
@@ -103,7 +107,7 @@ class S3Storage:
 def get_storage() -> StorageBackend:
     s = get_settings()
     if s.storage_backend == "s3":
-        st = S3Storage(s.s3_bucket, s.s3_endpoint_url, s.s3_region, s.s3_access_key, s.s3_secret_key)
+        st = S3Storage(s.s3_bucket, s.s3_endpoint_url, s.s3_region, s.s3_access_key, s.s3_secret_key, sse=s.s3_sse, path_style=s.s3_force_path_style)
         st.ensure_bucket()
         return st
     return LocalStorage(s.storage_local_path)

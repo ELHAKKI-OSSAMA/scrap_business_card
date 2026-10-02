@@ -1,0 +1,17 @@
+# Vercel Python function (api/index.py) — cloud-only mode: no PaddleOCR, no OpenCV, no Celery.
+# The full Docker stack installs from pyproject.toml files instead.
+fastapi==0.142.2
+pydantic==2.13.5
+pydantic-settings==2.15.0
+SQLAlchemy==2.1.1
+psycopg[binary]==3.3.6
+PyJWT==2.15.1
+argon2-cffi==25.1.0
+python-multipart==0.0.32
+boto3==1.43.105
+httpx==0.28.1
+numpy==2.5.3
+pillow==12.3.0
+phonenumberslite==9.0.40  # same "phonenumbers" module without geocoder/carrier data (-35 MB)
+email-validator==2.3.0
+prometheus-client==0.26.0

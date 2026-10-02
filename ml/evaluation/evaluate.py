@@ -102,7 +102,22 @@ def _country_iso(text: str | None) -> str | None:
     return COUNTRY_NAMES.get(normalize_search(text)) or next((iso for name, iso in COUNTRY_NAMES.items() if normalize_search(name) == normalize_search(text)), None)
 
 
-def evaluate(data_dir: Path, provider: str, limit: int | None, languages: list[str] | None) -> dict:
+def _vision_client():
+    """Ollama vision client from the environment / .env (OLLAMA_KEYS, OLLAMA_MODEL, OLLAMA_BASE_URL)."""
+    from extraction import OllamaVisionClient
+
+    env = dict(os.environ)
+    dot = Path(".env")
+    if dot.exists():
+        for line in dot.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                env.setdefault(k.strip(), v.strip())
+    keys = [k.strip() for k in env.get("OLLAMA_KEYS", "").split(",") if k.strip()]
+    return OllamaVisionClient(model=env.get("OLLAMA_MODEL", "gemma4:31b"), api_keys=keys, base_url=env.get("OLLAMA_BASE_URL", "https://ollama.com"))
+
+
+def evaluate(data_dir: Path, provider: str, limit: int | None, languages: list[str] | None, vision: bool = False) -> dict:
     try:
         import psutil
 
@@ -113,23 +128,31 @@ def evaluate(data_dir: Path, provider: str, limit: int | None, languages: list[s
     source = manifest.get("source", "unknown")
     sample_ids = manifest["samples"][:limit] if limit else manifest["samples"]
     t_load = time.perf_counter()
-    engine = OcrEngine(get_provider(OcrSettings(provider=provider, fallback=None)))
+    if provider == "ollama":  # cloud-only mode (Vercel): Gemma reads the card and extracts the fields
+        from extraction import OllamaCloudEngine
+
+        engine = OllamaCloudEngine(_vision_client())
+    else:
+        engine = OcrEngine(get_provider(OcrSettings(provider=provider, fallback=None)))
     ocr_agg, det_agg, field_agg, ent_agg = Agg(), Agg(), Agg(), Agg()
     calib = defaultdict(lambda: [0, 0])  # bucket -> [n, correct]
     latencies: list[float] = []
     failures = []
     peak_rss = 0
     models = None
+    vclient = _vision_client() if vision else None
+    vision_latencies: list[float] = []
     for sid in sample_ids:
         ann = json.loads((data_dir / sid / "annotation.json").read_text(encoding="utf-8"))
         tags = ann.get("tags", [])
         quality = next((t.split(":")[1] for t in tags if t.startswith("quality:")), "unknown")
         text_type = "printed"
         lang_tag = ann.get("languages", "und")
-        pages, images = [], {}
+        pages, images, raw_images = [], {}, []
         try:
             for side, sd in ann["sides"].items():
                 raw = (data_dir / sd["image"]).read_bytes()
+                raw_images.append(raw)
                 v = validate_image_bytes(raw)
                 t0 = time.perf_counter()
                 page, img = engine.process_page(v.rgb, Side(side), languages=languages, exif_transposed=v.exif_transposed)
@@ -158,6 +181,20 @@ def evaluate(data_dir: Path, provider: str, limit: int | None, languages: list[s
         group = f"{ann['product']}|lang={lang_tag}|quality={quality}|type={text_type}"
         if ann["product"] == "business_card":
             ex, _ = extract_business_card(pages, images)
+            if provider == "ollama":
+                from extraction import merge_vision
+
+                for card in engine.cards.values():
+                    ex = merge_vision(ex, card, [l for pg in pages for l in pg.lines], model=engine.provider.model)
+                engine.cards.clear()
+            if vclient:
+                from extraction import vision_enrich
+
+                t0 = time.perf_counter()
+                ex = vision_enrich(ex, raw_images, [l for pg in pages for l in pg.lines], vclient)
+                vision_latencies.append(time.perf_counter() - t0)
+                if "llm_unavailable_fallback_rules" in ex.warnings:
+                    failures.append({"id": sid, "error": "vision_llm_unavailable"})
             d = ex.model_dump(mode="json")
             checks = {
                 "full_name": (gt.get("full_name"), _v(d["full_name"])),
@@ -224,7 +261,8 @@ def evaluate(data_dir: Path, provider: str, limit: int | None, languages: list[s
         "source": source,
         "banner": "SYNTHETIC DATA ONLY – not representative of real-world accuracy" if source == "synthetic" else "REAL annotated data",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "provider": provider,
+        "provider": provider + ("+vision:" + vclient.model if vclient else ""),
+        "vision_latency_s_mean": round(statistics.mean(vision_latencies), 3) if vision_latencies else None,
         "languages_restriction": languages,
         "models": models,
         "environment": {"python": sys.version.split()[0], "platform": platform.platform(), "cpu_count": os.cpu_count()},
@@ -279,15 +317,16 @@ def to_markdown(r: dict) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="ml/datasets/synthetic/out")
-    ap.add_argument("--provider", default="paddleocr", choices=["paddleocr", "tesseract"])
+    ap.add_argument("--provider", default="paddleocr", choices=["paddleocr", "tesseract", "ollama"])
     ap.add_argument("--limit", type=int)
     ap.add_argument("--languages", help="comma list to restrict recognizers, e.g. ar,fr")
     ap.add_argument("--out", default="ml/evaluation/reports")
+    ap.add_argument("--vision", action="store_true", help="apply the Ollama vision LLM after the rules (sends images to OLLAMA_BASE_URL)")
     args = ap.parse_args()
-    rep = evaluate(Path(args.data), args.provider, args.limit, args.languages.split(",") if args.languages else None)
+    rep = evaluate(Path(args.data), args.provider, args.limit, args.languages.split(",") if args.languages else None, vision=args.vision)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    stem = f"{rep['source']}-{args.provider}"
+    stem = f"{rep['source']}-{args.provider}" + ("-vision" if args.vision else "")
     (out / f"{stem}.json").write_text(json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
     (out / f"{stem}.md").write_text(to_markdown(rep), encoding="utf-8")
     print(to_markdown(rep))

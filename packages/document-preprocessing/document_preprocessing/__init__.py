@@ -1,3 +1,7 @@
+"""Upload validation (Pillow + NumPy only) is imported eagerly; everything that needs OpenCV is
+loaded on first use, so the lightweight cloud deployment (OCR_PROVIDER=ollama, e.g. on Vercel)
+never imports cv2."""
+
 from document_preprocessing.validation import (
     ALLOWED_MIME_TYPES,
     ImageValidationError,
@@ -5,33 +9,28 @@ from document_preprocessing.validation import (
     sniff_mime,
     validate_image_bytes,
 )
-from document_preprocessing.quality import assess_quality
-from document_preprocessing.geometry import (
-    detect_document_quad,
-    estimate_skew_angle,
-    four_point_transform,
-    rotate_bound,
-    rotate_quadrant,
-)
-from document_preprocessing.enhance import enhance
-from document_preprocessing.pipeline import PreprocessOptions, PreprocessResult, preprocess
-from document_preprocessing.regions import detect_color_patches
 
-__all__ = [
-    "ALLOWED_MIME_TYPES",
-    "ImageValidationError",
-    "ValidatedImage",
-    "sniff_mime",
-    "validate_image_bytes",
-    "assess_quality",
-    "detect_document_quad",
-    "estimate_skew_angle",
-    "four_point_transform",
-    "rotate_bound",
-    "rotate_quadrant",
-    "enhance",
-    "PreprocessOptions",
-    "PreprocessResult",
-    "preprocess",
-    "detect_color_patches",
-]
+_LAZY = {
+    "assess_quality": "document_preprocessing.quality",
+    "detect_document_quad": "document_preprocessing.geometry",
+    "estimate_skew_angle": "document_preprocessing.geometry",
+    "four_point_transform": "document_preprocessing.geometry",
+    "rotate_bound": "document_preprocessing.geometry",
+    "rotate_quadrant": "document_preprocessing.geometry",
+    "enhance": "document_preprocessing.enhance",
+    "PreprocessOptions": "document_preprocessing.pipeline",
+    "PreprocessResult": "document_preprocessing.pipeline",
+    "preprocess": "document_preprocessing.pipeline",
+    "detect_color_patches": "document_preprocessing.regions",
+}
+
+
+def __getattr__(name: str):
+    if name in _LAZY:
+        import importlib
+
+        return getattr(importlib.import_module(_LAZY[name]), name)
+    raise AttributeError(f"module 'document_preprocessing' has no attribute {name!r}")
+
+
+__all__ = ["ALLOWED_MIME_TYPES", "ImageValidationError", "ValidatedImage", "sniff_mime", "validate_image_bytes", *_LAZY]

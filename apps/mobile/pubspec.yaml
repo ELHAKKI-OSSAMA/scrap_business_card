@@ -49,6 +49,7 @@ dependencies:
   intl: any
   flutter_localizations:
     sdk: flutter
+  image: ^4.10.1
 
 dev_dependencies:
   flutter_test:

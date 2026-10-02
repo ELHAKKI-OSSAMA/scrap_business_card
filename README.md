@@ -19,6 +19,14 @@ and a correction history; raw OCR output is never modified.
   web app on http://localhost:5174/. Needs Python 3.12 + uv and Node.js 20+; installs dependencies
   on first run. Close the two windows to stop.
 
+## Production: Vercel + PostgreSQL + S3 + Ollama Cloud
+
+`vercel.json` + `api/index.py` deploy the web app and the API as one Vercel project. OCR and
+extraction run on Gemma 4 via Ollama Cloud (`OCR_PROVIDER=ollama`), data in PostgreSQL (e.g.
+Supabase), images in S3-compatible storage (e.g. Supabase Storage). No PaddleOCR, Redis or Celery
+in that mode. Guide, limits and measured accuracy: [docs/deployment/vercel.md](docs/deployment/vercel.md).
+Local rehearsal: `docker compose -f docker-compose.vercel-sim.yml up -d --build` → http://localhost:8090.
+
 ## Quick start (Docker)
 
 ```bash
@@ -60,6 +68,7 @@ at least `DATABASE_URL`, `JWT_SECRET`, `REDIS_URL`.
 cd apps/mobile
 flutter pub get
 flutter run --dart-define=API_BASE=http://10.0.2.2:8080/api/v1      # Android emulator → Docker gateway
+flutter build apk --dart-define=API_BASE=https://<your-app>.vercel.app/api/v1   # production (Vercel)
 flutter build apk --debug
 ```
 
@@ -110,7 +119,7 @@ docs/                       architecture, models, API, deployment, security, use
 * Architecture: [system overview](docs/architecture/system-overview.md) · [OCR pipeline](docs/architecture/ocr-pipeline.md) · [decisions](docs/architecture/decisions.md)
 * Models: [selection](docs/models/model-selection.md) · [evaluation](docs/models/evaluation.md)
 * API: [overview](docs/api/openapi.md) · [openapi.json](docs/api/openapi.json)
-* Deployment: [Docker](docs/deployment/docker.md) · [production](docs/deployment/production.md)
+* Deployment: [Vercel (cloud-only)](docs/deployment/vercel.md) · [Docker](docs/deployment/docker.md) · [production](docs/deployment/production.md)
 * [Security and privacy](docs/security/privacy.md)
 * [User guide](docs/user-guides/business-card.md) · [Business-card audit](docs/business-card/audit.md)
 

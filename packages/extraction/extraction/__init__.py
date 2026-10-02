@@ -7,6 +7,8 @@ from extraction.export import (
     to_vcard,
 )
 from extraction.llm import LlmClient, OpenAICompatibleClient, llm_enrich
+from extraction.cloud_ocr import OllamaCloudEngine, parse_cloud_read
+from extraction.vision_llm import OllamaVisionClient, merge_vision, parse_card_json, vision_enrich
 
 __all__ = [
     "dedupe_keys",
@@ -19,4 +21,10 @@ __all__ = [
     "LlmClient",
     "OpenAICompatibleClient",
     "llm_enrich",
+    "OllamaVisionClient",
+    "merge_vision",
+    "parse_card_json",
+    "vision_enrich",
+    "OllamaCloudEngine",
+    "parse_cloud_read",
 ]

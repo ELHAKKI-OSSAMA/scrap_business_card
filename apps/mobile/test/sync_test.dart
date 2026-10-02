@@ -25,7 +25,18 @@ void main() {
     server = FakeServer();
     sync = SyncService(store: store, api: server, pollInterval: Duration.zero, maxPolls: 3);
   });
-  tearDown(() => tmp.delete(recursive: true));
+  tearDown(() async {
+    // Windows keeps a file locked for a moment after a background read finishes: retry briefly
+    for (var i = 0; ; i++) {
+      try {
+        await tmp.delete(recursive: true);
+        return;
+      } on FileSystemException {
+        if (i >= 20) rethrow;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    }
+  });
 
   Future<Draft> queued({bool back = true}) async {
     final d = Draft(localId: 'local1', product: 'business_card');

@@ -16,10 +16,17 @@ class Base(DeclarativeBase):
 
 @lru_cache
 def get_engine() -> Engine:
-    url = get_settings().database_url
+    s = get_settings()
+    url = s.database_url
     kwargs: dict = {"pool_pre_ping": True}
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
+    elif s.db_serverless:
+        # serverless (Vercel) + external pooler (Supabase :6543, transaction mode): no client-side
+        # pool, and no server-side prepared statements (they do not survive transaction pooling)
+        from sqlalchemy.pool import NullPool
+
+        kwargs = {"poolclass": NullPool, "connect_args": {"prepare_threshold": None}}
     engine = create_engine(url, **kwargs)
     if url.startswith("sqlite"):
 

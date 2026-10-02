@@ -8,6 +8,7 @@ import '../api/api_client.dart';
 import '../drafts/draft.dart';
 import '../drafts/draft_store.dart';
 import '../modules/product.dart';
+import 'shrink.dart';
 
 /// Uploads queued drafts and follows their server jobs.
 ///
@@ -64,10 +65,15 @@ class SyncService extends ChangeNotifier {
           final file = File(entry.value);
           final hash = await sha256File(file);
           if (d.uploadedSha[entry.key] == hash) continue;
-          await api.uploadImage(module.route, d.serverId!, entry.key, file, onProgress: (pct) {
-            progress[d.localId] = pct;
-            notifyListeners();
-          });
+          final upload = await shrinkForUpload(file);
+          try {
+            await api.uploadImage(module.route, d.serverId!, entry.key, upload, onProgress: (pct) {
+              progress[d.localId] = pct;
+              notifyListeners();
+            });
+          } finally {
+            if (upload.path != file.path && await upload.exists()) await upload.delete();
+          }
           d.uploadedSha[entry.key] = hash;
           await store.save(d); // persisted per side: an interrupted batch resumes where it stopped
         }

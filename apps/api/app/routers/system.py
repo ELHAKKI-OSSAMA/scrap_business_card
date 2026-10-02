@@ -3,7 +3,9 @@ from __future__ import annotations
 import uuid
 
 import httpx
-from fastapi import APIRouter, Depends, Response
+import hmac
+
+from fastapi import APIRouter, Depends, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
@@ -13,10 +15,9 @@ from app.db import get_db
 from app.deps import Principal, get_principal
 from app.errors import ApiError
 from app.models import ProcessingJob
-from app.ocr_runtime import ocr_settings
+from app.ocr_runtime import provider_status
 from app.schemas import JobOut, TranslateIn, TranslateOut
 from app.storage import get_storage
-from ocr_core import provider_status
 
 router = APIRouter()
 
@@ -47,7 +48,7 @@ def ready(response: Response, db: Session = Depends(get_db)):
         checks["storage"] = {"ok": get_storage().healthy(), "backend": s.storage_backend}
     except Exception as exc:
         checks["storage"] = {"ok": False, "error": type(exc).__name__}
-    ocr = {p["provider"]: p["available"] for p in provider_status(ocr_settings()) if p["provider"] != "handwriting"}
+    ocr = {p["provider"]: p["available"] for p in provider_status() if p["provider"] != "handwriting"}
     primary = ocr.get(s.ocr_provider, False)
     fallback = ocr.get(s.ocr_fallback_provider, False) if s.ocr_fallback_provider != "none" else False
     # the API process does not run OCR itself in celery mode, but the image is shared with the worker
@@ -61,12 +62,13 @@ def ready(response: Response, db: Session = Depends(get_db)):
 def models(_: Principal = Depends(get_principal)):
     s = get_settings()
     return {
-        "ocr": provider_status(ocr_settings()),
+        "ocr": provider_status(),
         "default_provider": s.ocr_provider,
         "fallback_provider": s.ocr_fallback_provider,
         "device": s.ocr_device,
         "extraction": {
             "rules": {"available": True, "version": "1.0", "languages": ["ar", "fr", "en"]},
+            "vision_llm": {"available": s.ocr_provider == "ollama" or s.llm_provider == "ollama_vision", "model": s.ollama_model, "external": True},
             "llm": {"available": s.llm_enabled, "provider": s.llm_provider, "model": s.llm_model if s.llm_enabled else None, "external": bool(s.llm_enabled)},
         },
         "translation": {"available": s.translation_provider != "none" and bool(s.translation_url), "provider": s.translation_provider},
@@ -103,6 +105,18 @@ def translate(body: TranslateIn, _: Principal = Depends(get_principal)):
     except (httpx.HTTPError, KeyError, ValueError) as exc:
         raise ApiError(502, "translation_failed", "The translation service failed.") from exc
     return TranslateOut(translated_text=out, provider=s.translation_provider, source=body.source, target=body.target)
+
+
+@router.get("/internal/retention", include_in_schema=False)
+def retention_cron(request: Request):
+    """Retention purge for serverless deployments (Vercel Cron); replaces the Celery beat job."""
+    secret = get_settings().cron_secret
+    auth = request.headers.get("authorization", "")
+    if not secret or not hmac.compare_digest(auth, f"Bearer {secret}"):
+        raise ApiError(404, "not_found", "Not found.")
+    from app.services.retention import purge
+
+    return purge()
 
 
 @router.get("/metrics", include_in_schema=False)

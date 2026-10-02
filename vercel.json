@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci",
+  "buildCommand": "VITE_BASE=/ npm run build -w apps/business-card-web",
+  "outputDirectory": "apps/business-card-web/dist",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "includeFiles": "{apps/api/app/**,packages/shared-types/shared_types/**,packages/ocr-core/ocr_core/**,packages/language-detection/language_detection/**,packages/document-preprocessing/document_preprocessing/**,packages/extraction/extraction/**,packages/validation/validation/**}",
+      "excludeFiles": "{**/__pycache__/**,**/tests/**,**/*.egg-info/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ],
+  "crons": [{ "path": "/api/v1/internal/retention", "schedule": "0 3 * * *" }]
+}

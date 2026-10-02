@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     app_name: str = "Multilingual OCR Suite API"
     api_prefix: str = "/api/v1"
+    db_serverless: bool = False  # Vercel: NullPool + no prepared statements (PgBouncer/Supavisor)
     log_level: str = "INFO"
 
     database_url: str = "sqlite:///./dev.db"
@@ -47,12 +48,15 @@ class Settings(BaseSettings):
     s3_region: str = "us-east-1"
     s3_access_key: str | None = None
     s3_secret_key: str | None = None
+    s3_sse: str = "AES256"  # server-side encryption header; empty for providers that reject it (Supabase)
+    s3_force_path_style: bool = False  # true for Supabase Storage / MinIO style endpoints
 
     # jobs
     job_execution: Literal["celery", "thread", "sync"] = "thread"
 
     # OCR
-    ocr_provider: Literal["paddleocr", "tesseract"] = "paddleocr"
+    # ollama: cloud-only mode (Vercel) — Gemma 4 via OLLAMA_BASE_URL reads the card; no Paddle/OpenCV
+    ocr_provider: Literal["paddleocr", "tesseract", "ollama"] = "paddleocr"
     ocr_fallback_provider: Literal["tesseract", "none"] = "tesseract"
     ocr_device: str = "cpu"  # cpu | gpu:0
     ocr_det_model: str = "PP-OCRv5_mobile_det"
@@ -61,11 +65,16 @@ class Settings(BaseSettings):
 
     # extraction
     default_phone_region: str | None = None  # e.g. "MA" – only used if explicitly configured
-    llm_provider: Literal["none", "openai_compatible"] = "none"
+    # ollama_vision: Gemma 4 (or another vision model) via the Ollama API; sends the card IMAGE
+    # and OCR text to OLLAMA_BASE_URL and runs on every job. External service — needs consent.
+    llm_provider: Literal["none", "openai_compatible", "ollama_vision"] = "none"
     llm_base_url: str | None = None
     llm_model: str | None = None
     llm_api_key: str | None = None
     llm_timeout_s: float = 60.0
+    ollama_base_url: str = "https://ollama.com"
+    ollama_model: str = "gemma4:31b"
+    ollama_keys: str = ""  # comma-separated; the next key is tried on 401/403/429/5xx
 
     # optional machine translation (separate feature, always labelled machine-generated)
     translation_provider: Literal["none", "libretranslate"] = "none"
@@ -81,6 +90,8 @@ class Settings(BaseSettings):
     document_retention_days: int = 0  # 0 = keep until deleted
 
     metrics_enabled: bool = True
+    # Vercel Cron sends "Authorization: Bearer $CRON_SECRET" to /api/v1/internal/retention
+    cron_secret: str | None = None
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -91,7 +102,13 @@ class Settings(BaseSettings):
 
     @property
     def llm_enabled(self) -> bool:
+        if self.llm_provider == "ollama_vision":
+            return bool(self.ollama_model)
         return self.llm_provider != "none" and bool(self.llm_base_url and self.llm_model)
+
+    @property
+    def ollama_key_list(self) -> list[str]:
+        return [k.strip() for k in self.ollama_keys.split(",") if k.strip()]
 
     def check_production(self) -> None:
         if self.environment == "production":

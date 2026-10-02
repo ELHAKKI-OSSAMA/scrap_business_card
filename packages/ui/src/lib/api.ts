@@ -1,4 +1,5 @@
 import type { ApiErrorBody, Duplicate, DocumentOut, DocumentSummary, FieldChange, Job, Me, PageOf, ReviewEvent, Side } from "@ocr/shared-types";
+import { shrinkForUpload } from "./image";
 
 /**
  * API client. The access token lives only in memory; the refresh token is kept in
@@ -89,7 +90,7 @@ export function productApi(route: ProductRoute) {
     get: <D,>(id: string) => json<DocumentOut<D>>(`${base}/${id}`),
     create: (body: { title?: string; notes?: string; client_ref?: string }) => json<DocumentOut>(base, { method: "POST", body: JSON.stringify(body) }),
     updateMeta: (id: string, body: { title?: string | null; notes?: string | null }) => json<DocumentOut>(`${base}/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
-    upload: (id: string, side: Side, file: File, onProgress?: (pct: number) => void) => uploadWithProgress(`${base}/${id}/images?side=${side}`, file, onProgress),
+    upload: async (id: string, side: Side, file: File, onProgress?: (pct: number) => void) => uploadWithProgress(`${base}/${id}/images?side=${side}`, await shrinkForUpload(file), onProgress),
     removeImage: (id: string, side: Side) => json<DocumentOut>(`${base}/${id}/images/${side}`, { method: "DELETE" }),
     process: (id: string, body: { languages?: string[] | null; force?: boolean; use_llm?: boolean }) => json<{ job_id: string; status: string; reused: boolean }>(`${base}/${id}/process`, { method: "POST", body: JSON.stringify(body) }),
     patchFields: (id: string, changes: FieldChange[], expected_version?: number) => json<DocumentOut>(`${base}/${id}/fields`, { method: "PATCH", body: JSON.stringify({ changes, expected_version }) }),

@@ -79,7 +79,8 @@ def run_case(c: httpx.Client, case) -> str:
     job = wait_job(c, r.json()["job_id"])
     e2e = time.perf_counter() - t0
     check(job["status"] == "completed", f"job completed ({job['status']} {job.get('error_code')})")
-    check(job.get("provider") == "paddleocr", f"provider recorded: {job.get('provider')}")
+    expected = c.get("/models").json().get("default_provider", "paddleocr")
+    check(job.get("provider") == expected, f"provider recorded: {job.get('provider')} (server default {expected})")
     got = c.get(f"/business-cards/{doc['id']}").json()
     d = got["data"] or {}
     lines = [l for p in got.get("ocr") or [] for l in p["lines"]]
@@ -97,7 +98,9 @@ def run_case(c: httpx.Client, case) -> str:
     for k in ("full_name", "company", "job_title"):
         f = d.get(k) or {}
         if f.get("value") and not str(f.get("notes") or "").startswith("inferred"):
-            check(bool(f.get("source_region_ids")) and f.get("confidence") is not None and f.get("original_value"), f"{k} keeps source/confidence/original")
+            # the cloud model (provider "ollama") gives no confidence scores: None is the honest value
+            conf_ok = f.get("confidence") is not None or job.get("provider") == "ollama"
+            check(bool(f.get("source_region_ids")) and conf_ok and f.get("original_value"), f"{k} keeps source/confidence/original")
     info(f"review_fields={d.get('review_fields')} warnings={d.get('warnings')}")
     # review: verify a field, edit another, retrieve
     if v(d, "full_name"):

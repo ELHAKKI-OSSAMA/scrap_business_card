@@ -9,6 +9,13 @@ leave every consequential decision to a person.
 * OCR, extraction and validation run inside the stack; **no external API is called by default**.
 * Optional, off by default, and only to endpoints the operator configures:
   LLM enrichment (`LLM_PROVIDER`), translation (`TRANSLATION_PROVIDER`), S3 storage.
+* `OCR_PROVIDER=ollama` (cloud-only mode, the Vercel deployment) sends **every card image** to
+  Ollama Cloud, which reads it and proposes the fields; nothing is processed locally.
+* `LLM_PROVIDER=ollama_vision` (Gemma 4 via `OLLAMA_BASE_URL`, Ollama Cloud by default) sends the
+  **card image and its OCR text** to that service for every processed card. Use it only with the
+  operator's/client's consent. Its answers are accepted only when grounded in the OCR text, and are
+  always marked `needs_review`. Keys live in `.env` (`OLLAMA_KEYS`), never in the code; the worker
+  is the only container with outbound internet (`egress` network).
 * QR codes are decoded and their URLs checked (`is_safe_url`), but **never opened or fetched**.
 * Model weights are baked into the image at build time; nothing is downloaded at runtime.
 

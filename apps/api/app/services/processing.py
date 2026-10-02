@@ -16,11 +16,12 @@ from app.config import get_settings
 from app.db import get_sessionmaker
 from app.models import Document, DocumentKey, ExtractionResult, OcrRegion, ProcessingJob
 from app.observability import JOBS, OCR_DURATION
-from app.ocr_runtime import get_engine
+from app.ocr_runtime import get_engine, vision_client
 from app.products import PRODUCTS
 from app.storage import get_storage
 from document_preprocessing import ImageValidationError, validate_image_bytes
-from extraction import OpenAICompatibleClient, dedupe_keys, llm_enrich
+from extraction import OpenAICompatibleClient, dedupe_keys, llm_enrich, merge_vision, vision_enrich
+from extraction.vision_llm import AllKeysFailedError
 from extraction.common import all_lines
 from language_detection import normalize_search
 from ocr_core import OcrUnavailableError
@@ -46,6 +47,13 @@ def run_job(job_id: uuid.UUID, db: Session | None = None) -> None:
     db = db or get_sessionmaker()()
     try:
         _run(db, job_id)
+    except Exception:  # noqa: BLE001 – never leave a job "running" (sync mode answers inside the request)
+        log.exception("processing error", extra={"job_id": str(job_id)})
+        db.rollback()
+        job = db.get(ProcessingJob, job_id)
+        doc = db.get(Document, job.document_id) if job else None
+        if job is not None and doc is not None and job.status in ("queued", "running"):
+            _fail(db, job, doc, "processing_error", "unexpected error")
     finally:
         if own:
             db.close()
@@ -89,6 +97,7 @@ def _run(db: Session, job_id: uuid.UUID) -> None:
 
     pages: list[OcrPage] = []
     images = {}
+    raw_images: list[bytes] = []
     try:
         for img in sorted(doc.images, key=lambda i: i.side):
             raw = storage.get(img.storage_key)
@@ -103,11 +112,15 @@ def _run(db: Session, job_id: uuid.UUID) -> None:
                 storage.delete(old_key)
             pages.append(page)
             images[Side(img.side)] = processed
-    except OcrUnavailableError as exc:
+            raw_images.append(_jpeg(processed))
+    except (OcrUnavailableError, AllKeysFailedError) as exc:
         _fail(db, job, doc, "ocr_engine_unavailable", str(exc))
         return
     except ImageValidationError as exc:
         _fail(db, job, doc, exc.code, exc.message)
+        return
+    except ValueError as exc:  # cloud mode: the model answer was not valid JSON for the schema
+        _fail(db, job, doc, "ocr_invalid_answer", type(exc).__name__)
         return
     except Exception as exc:  # noqa: BLE001 – recorded on the job, re-raised to logs only
         log.exception("processing error", extra={"job_id": str(job.id)})
@@ -116,7 +129,15 @@ def _run(db: Session, job_id: uuid.UUID) -> None:
 
     default_region = opts.get("default_phone_region") or settings.default_phone_region
     extraction, regions = spec.extract(pages, images, {"default_phone_region": default_region})
-    if opts.get("use_llm") and settings.llm_enabled:
+    cards = getattr(engine, "cards", None)
+    if cards:  # cloud mode: the fields came with the OCR answer
+        lines = all_lines(pages)
+        for card in cards.values():
+            extraction = merge_vision(extraction, card, lines, model=engine.provider.model, default_region=default_region)
+    elif settings.llm_provider == "ollama_vision":
+        client = vision_client()
+        extraction = vision_enrich(extraction, raw_images, all_lines(pages), client, default_region=default_region)
+    elif opts.get("use_llm") and settings.llm_enabled:
         client = OpenAICompatibleClient(base_url=settings.llm_base_url or "", model=settings.llm_model or "", api_key=settings.llm_api_key, timeout=settings.llm_timeout_s)
         extraction = llm_enrich(extraction, all_lines(pages), client, settings={"temperature": 0.0})
     elif opts.get("use_llm"):
@@ -176,3 +197,4 @@ def _needs_review(data: dict) -> bool:
         return False
 
     return walk(data)
+

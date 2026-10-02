@@ -38,6 +38,9 @@ x-api-env: &api-env
   LLM_BASE_URL: ${LLM_BASE_URL:-}
   LLM_MODEL: ${LLM_MODEL:-}
   LLM_API_KEY: ${LLM_API_KEY:-}
+  OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-https://ollama.com}
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma4:31b}
+  OLLAMA_KEYS: ${OLLAMA_KEYS:-}
   TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER:-none}
   TRANSLATION_URL: ${TRANSLATION_URL:-}
   DELETED_RETENTION_DAYS: ${DELETED_RETENTION_DAYS:-30}
@@ -114,7 +117,7 @@ services:
       timeout: 20s
       retries: 5
       start_period: 60s
-    networks: [backend]
+    networks: [backend, egress]  # egress: optional vision LLM (OLLAMA_BASE_URL)
     restart: unless-stopped
 
   beat:
@@ -204,6 +207,7 @@ services:
 networks:
   backend: { internal: true }   # postgres / redis / workers are never reachable from outside
   frontend: {}
+  egress: {}   # outbound internet for the worker only (vision LLM); nothing is published on it
 
 volumes:
   pgdata: {}
