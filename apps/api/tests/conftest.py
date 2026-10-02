@@ -24,6 +24,7 @@ os.environ.update(
         "DISABLE_MODEL_SOURCE_CHECK": "True",
         # never call an external LLM from tests, whatever the developer's .env says
         "LLM_PROVIDER": "none",
+        "OCR_PROVIDER": "paddleocr",
         "OLLAMA_KEYS": "",
     }
 )
