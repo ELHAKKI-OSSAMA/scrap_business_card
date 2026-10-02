@@ -18,3 +18,5 @@ tests/business_card/real_world/*/
 *.egg-info/
 vercel.production.env
 .vercel/
+
+.vercel

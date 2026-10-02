@@ -6,13 +6,24 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "{apps/api/app/**,packages/shared-types/shared_types/**,packages/ocr-core/ocr_core/**,packages/language-detection/language_detection/**,packages/document-preprocessing/document_preprocessing/**,packages/extraction/extraction/**,packages/validation/validation/**}",
-      "excludeFiles": "{**/__pycache__/**,**/tests/**,**/*.egg-info/**}"
+      "includeFiles": "{apps/api/app/**/*.py,packages/**/*.py}",
+      "excludeFiles": "{**/__pycache__/**,**/tests/**,**/node_modules/**}"
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
   ],
-  "crons": [{ "path": "/api/v1/internal/retention", "schedule": "0 3 * * *" }]
+  "crons": [
+    {
+      "path": "/api/v1/internal/retention",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

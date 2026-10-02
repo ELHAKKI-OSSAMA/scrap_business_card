@@ -1,0 +1,20 @@
+# never upload secrets or heavy local artefacts to Vercel
+.env
+.env.*
+!.env.example
+vercel.production.env
+.venv
+**/node_modules
+**/__pycache__
+**/*.egg-info
+**/dist
+apps/mobile
+ml/datasets
+ml/evaluation/reports
+tests
+test-results
+data
+infrastructure
+docs
+*.apk
+*.tar.gz
