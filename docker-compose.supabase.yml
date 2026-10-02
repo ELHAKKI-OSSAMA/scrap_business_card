@@ -1,0 +1,23 @@
+# Override for docker-compose.vercel-sim.yml: same Vercel code path, but against the REAL
+# Supabase database (SUPABASE_DATABASE_URL, transaction pooler :6543) and Supabase Storage (S3_*),
+# all read from .env. Runs the migrations on Supabase first.
+#
+#   docker compose -f docker-compose.vercel-sim.yml -f docker-compose.supabase.yml up -d --build migrate app web
+x-supabase-env: &supabase-env
+  DATABASE_URL: ${SUPABASE_DATABASE_URL:?add SUPABASE_DATABASE_URL to .env}
+  S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?set S3_ENDPOINT_URL in .env}
+  S3_REGION: ${S3_REGION:-us-east-1}
+  S3_BUCKET: ${S3_BUCKET:-business-cards}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+  S3_SSE: ${S3_SSE:-AES256}
+  S3_FORCE_PATH_STYLE: "true"
+
+services:
+  migrate:
+    environment: *supabase-env
+    depends_on: !reset {}
+  app:
+    environment: *supabase-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
