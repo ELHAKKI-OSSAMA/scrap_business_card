@@ -426,6 +426,9 @@
     "model": "Model",
     "estimated": "estimate",
     "noLimit": "Limit not published by the provider — set LIMIT_OLLAMA_REQUESTS_* to show a gauge.",
-    "note": "Measured from the application's own data (providers do not expose their quotas). Vercel: requests ≤ {{mb}} MB, processing ≤ {{s}} s."
+    "note": "Measured from the application's own data (providers do not expose their quotas). Vercel: requests ≤ {{mb}} MB, processing ≤ {{s}} s.",
+    "ollamaWeek": "Ollama requests (last 7 days)",
+    "ollamaWeekHint": "Ollama Cloud free usage resets weekly. Estimated, adjustable limit (LIMIT_OLLAMA_REQUESTS_WEEK); the exact percentage is on ollama.com → Usage.",
+    "warning": "Warning, limit almost reached:"
   }
 }

@@ -508,11 +508,13 @@ export function SettingsPage() {
           <>
             <UsageBar label={t("usage.database")} used={usage.data.database.used_bytes} limit={usage.data.database.limit_bytes} bytes />
             <UsageBar label={t("usage.storage")} used={usage.data.storage.used_bytes} limit={usage.data.storage.limit_bytes} bytes estimated />
-            <UsageBar label={t("usage.ollamaDay")} used={usage.data.ollama.requests_today} limit={usage.data.ollama.limit_day} />
-            <UsageBar label={t("usage.ollamaMonth")} used={usage.data.ollama.requests_month} limit={usage.data.ollama.limit_month} />
+            <UsageBar label={t("usage.ollamaWeek")} used={usage.data.ollama.requests_7d} limit={usage.data.ollama.limit_week} hint={t("usage.ollamaWeekHint")} />
+            {usage.data.ollama.limit_day ? <UsageBar label={t("usage.ollamaDay")} used={usage.data.ollama.requests_today} limit={usage.data.ollama.limit_day} /> : null}
+            {usage.data.ollama.limit_month ? <UsageBar label={t("usage.ollamaMonth")} used={usage.data.ollama.requests_month} limit={usage.data.ollama.limit_month} /> : null}
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
               <div><dt className="text-xs text-ink-3">{t("usage.documents")}</dt><dd className="font-medium">{formatNumber(usage.data.documents.active, i18n.language)}</dd></div>
-              <div><dt className="text-xs text-ink-3">{t("usage.ollama7d")}</dt><dd className="font-medium">{formatNumber(usage.data.ollama.requests_7d, i18n.language)}</dd></div>
+              <div><dt className="text-xs text-ink-3">{t("usage.ollamaDay")}</dt><dd className="font-medium">{formatNumber(usage.data.ollama.requests_today, i18n.language)}</dd></div>
+              <div><dt className="text-xs text-ink-3">{t("usage.ollamaMonth")}</dt><dd className="font-medium">{formatNumber(usage.data.ollama.requests_month, i18n.language)}</dd></div>
               <div><dt className="text-xs text-ink-3">{t("usage.keys")}</dt><dd className="font-medium">{usage.data.ollama.keys}</dd></div>
               <div><dt className="text-xs text-ink-3">{t("usage.model")}</dt><dd className="font-mono text-xs" dir="ltr">{usage.data.ollama.model ?? "—"}</dd></div>
             </dl>
@@ -565,7 +567,7 @@ function formatBytes(n: number, lang: string): string {
 }
 
 /** One quota line: used / limit with a coloured bar (amber ≥ 75 %, red ≥ 90 %). Unknown limit → value only. */
-function UsageBar({ label, used, limit, bytes, estimated }: { label: string; used: number | null; limit: number | null; bytes?: boolean; estimated?: boolean }) {
+function UsageBar({ label, used, limit, bytes, estimated, hint }: { label: string; used: number | null; limit: number | null; bytes?: boolean; estimated?: boolean; hint?: string }) {
   const { t, i18n } = useTranslation();
   const fmt = (n: number) => (bytes ? formatBytes(n, i18n.language) : formatNumber(n, i18n.language));
   const pct = used != null && limit ? Math.min(100, (used / limit) * 100) : null;
@@ -583,6 +585,8 @@ function UsageBar({ label, used, limit, bytes, estimated }: { label: string; use
           <div className={cx("h-full rounded-full transition-all", tone)} style={{ width: `${pct ?? 0}%` }} />
         </div>
       ) : <p className="text-xs text-ink-3">{t("usage.noLimit")}</p>}
+      {hint && <p className="text-xs text-ink-3">{hint}</p>}
     </div>
   );
 }
+

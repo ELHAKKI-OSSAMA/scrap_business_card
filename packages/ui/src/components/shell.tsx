@@ -132,7 +132,7 @@ export function AppShell({ brand, children }: { brand: ProductBrand; children: R
       {!online && (
         <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"><WifiOff className="me-1 inline size-4" />{t("errors.network_error")}</div>
       )}
-      <main id="main" className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+      <main id="main" className="mx-auto max-w-7xl px-4 py-6"><div className="mb-4 empty:hidden"><UsageWarning /></div>{children}</main>
     </div>
   );
 }
@@ -219,5 +219,28 @@ export function LoginScreen({ brand }: { brand: ProductBrand }) {
         <div className="mt-4 flex items-center justify-center gap-3"><LanguageSelector /><ThemeToggle /></div>
       </div>
     </div>
+  );
+}
+
+/** Banner shown on every page when a quota passes the warning threshold (default 80 %). */
+export function UsageWarning() {
+  const { t } = useTranslation();
+  const usage = useQuery({ queryKey: ["usage"], queryFn: accountApi.usage, staleTime: 300_000, retry: false });
+  const u = usage.data;
+  if (!u) return null;
+  const items: [string, number | null, number | null][] = [
+    [t("usage.database"), u.database.used_bytes, u.database.limit_bytes],
+    [t("usage.storage"), u.storage.used_bytes, u.storage.limit_bytes],
+    [t("usage.ollamaWeek"), u.ollama.requests_7d, u.ollama.limit_week],
+    [t("usage.ollamaDay"), u.ollama.requests_today, u.ollama.limit_day],
+    [t("usage.ollamaMonth"), u.ollama.requests_month, u.ollama.limit_month],
+  ];
+  const over = items.filter(([, used, limit]) => used != null && limit && (used / limit) * 100 >= u.warn_percent);
+  if (!over.length) return null;
+  return (
+    <Alert tone="warning">
+      {t("usage.warning")} {over.map(([label, used, limit]) => `${label} ${Math.round(((used ?? 0) / (limit ?? 1)) * 100)} %`).join(" · ")}{" "}
+      <NavLink to="/settings" className="font-medium underline">{t("nav.settings")}</NavLink>
+    </Alert>
   );
 }

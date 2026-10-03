@@ -426,6 +426,9 @@
     "model": "Modèle",
     "estimated": "estimation",
     "noLimit": "Limite non communiquée par le fournisseur — définissez LIMIT_OLLAMA_REQUESTS_* pour afficher une jauge.",
-    "note": "Mesuré à partir des données de l’application (les fournisseurs n’exposent pas leurs quotas). Vercel : requêtes ≤ {{mb}} Mo, traitement ≤ {{s}} s."
+    "note": "Mesuré à partir des données de l’application (les fournisseurs n’exposent pas leurs quotas). Vercel : requêtes ≤ {{mb}} Mo, traitement ≤ {{s}} s.",
+    "ollamaWeek": "Requêtes Ollama (7 derniers jours)",
+    "ollamaWeekHint": "Le quota gratuit d’Ollama Cloud se renouvelle chaque semaine. Limite estimée et réglable (LIMIT_OLLAMA_REQUESTS_WEEK) ; le pourcentage exact est sur ollama.com → Usage.",
+    "warning": "Attention, limite bientôt atteinte :"
   }
 }

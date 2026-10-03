@@ -212,8 +212,9 @@ export interface Usage {
   documents: { active: number; workspace: number };
   database: { used_bytes: number | null; limit_bytes: number | null };
   storage: { used_bytes: number; limit_bytes: number | null; estimated: boolean };
-  ollama: { model: string | null; keys: number; requests_today: number; requests_month: number; requests_7d: number; limit_day: number | null; limit_month: number | null };
+  ollama: { model: string | null; keys: number; requests_today: number; requests_month: number; requests_7d: number; limit_week: number | null; limit_day: number | null; limit_month: number | null };
   vercel: { max_request_mb: number; function_timeout_s: number };
+  warn_percent: number;
 }
 
 export interface PageOf<T> { items: T[]; total: number; page: number; page_size: number }

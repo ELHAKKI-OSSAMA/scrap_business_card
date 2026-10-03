@@ -99,6 +99,10 @@ class Settings(BaseSettings):
     limit_storage_mb: int = 1024
     limit_ollama_requests_day: int = 0
     limit_ollama_requests_month: int = 0
+    # Ollama Cloud free usage resets weekly; ~8000 requests/week is a cautious estimate
+    # (206 requests = 1.5 % measured on 2026-10-04 → ~13 700). Rolling 7-day window.
+    limit_ollama_requests_week: int = 8000
+    usage_warn_percent: int = 80
 
     @field_validator("cors_origins", mode="before")
     @classmethod

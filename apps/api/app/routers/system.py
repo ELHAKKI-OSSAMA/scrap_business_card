@@ -147,10 +147,12 @@ def usage(p: Principal = Depends(get_principal), db: Session = Depends(get_db)):
             "requests_today": requests_since(day),
             "requests_month": requests_since(month),
             "requests_7d": requests_since(now - timedelta(days=7)),
+            "limit_week": s.limit_ollama_requests_week or None,
             "limit_day": s.limit_ollama_requests_day or None,
             "limit_month": s.limit_ollama_requests_month or None,
         },
         "vercel": {"max_request_mb": 4.5, "function_timeout_s": 60},
+        "warn_percent": s.usage_warn_percent,
     }
 
 
