@@ -107,6 +107,53 @@ def translate(body: TranslateIn, _: Principal = Depends(get_principal)):
     return TranslateOut(translated_text=out, provider=s.translation_provider, source=body.source, target=body.target)
 
 
+@router.get("/usage", tags=["system"], summary="Usage against the plan limits (database, storage, Ollama requests)")
+def usage(p: Principal = Depends(get_principal), db: Session = Depends(get_db)):
+    """Measured from this application's own data; providers do not expose their quotas through an
+    API, so the limits are the configured LIMIT_* values (defaults: Supabase Free)."""
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import func
+
+    from app.models import Document, DocumentImage, ProcessingJob
+
+    s = get_settings()
+    now = datetime.now(timezone.utc)
+    db_bytes = None
+    if db.bind.dialect.name == "postgresql":
+        db_bytes = db.scalar(text("select pg_database_size(current_database())"))
+    storage_bytes = db.scalar(select(func.coalesce(func.sum(DocumentImage.size_bytes), 0))) or 0
+    processed_images = db.scalar(select(func.count()).select_from(DocumentImage).where(DocumentImage.processed_key.is_not(None))) or 0
+    storage_estimate = int(storage_bytes + processed_images * 250_000)  # processed copies ≈ 250 KB (JPEG ≤1600 px)
+
+    def requests_since(t):
+        # one Ollama request per processed side of each cloud job
+        q = (select(func.count()).select_from(ProcessingJob)
+             .join(DocumentImage, DocumentImage.document_id == ProcessingJob.document_id)
+             .where(ProcessingJob.created_at >= t, ProcessingJob.provider == "ollama"))
+        return db.scalar(q) or 0
+
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month = day.replace(day=1)
+    docs = db.scalar(select(func.count()).select_from(Document).where(Document.deleted_at.is_(None))) or 0
+    return {
+        "measured_at": now.isoformat(),
+        "documents": {"active": docs, "workspace": db.scalar(select(func.count()).select_from(Document).where(Document.workspace_id == p.workspace.id, Document.deleted_at.is_(None))) or 0},
+        "database": {"used_bytes": db_bytes, "limit_bytes": s.limit_db_mb * 1024 * 1024 if s.limit_db_mb else None},
+        "storage": {"used_bytes": storage_estimate, "limit_bytes": s.limit_storage_mb * 1024 * 1024 if s.limit_storage_mb else None, "estimated": True},
+        "ollama": {
+            "model": s.ollama_model if s.ocr_provider == "ollama" or s.llm_provider == "ollama_vision" else None,
+            "keys": len(s.ollama_key_list),
+            "requests_today": requests_since(day),
+            "requests_month": requests_since(month),
+            "requests_7d": requests_since(now - timedelta(days=7)),
+            "limit_day": s.limit_ollama_requests_day or None,
+            "limit_month": s.limit_ollama_requests_month or None,
+        },
+        "vercel": {"max_request_mb": 4.5, "function_timeout_s": 60},
+    }
+
+
 @router.get("/internal/retention", include_in_schema=False)
 def retention_cron(request: Request):
     """Retention purge for serverless deployments (Vercel Cron); replaces the Celery beat job."""

@@ -218,4 +218,66 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get inferredNote => 'Déduit, non imprimé sur la carte — à confirmer';
+
+  @override
+  String get welcome => 'Bienvenue';
+
+  @override
+  String get loginSubtitle =>
+      'Connectez-vous pour scanner et gérer vos cartes de visite.';
+
+  @override
+  String get advanced => 'Avancé';
+
+  @override
+  String get registrationClosed =>
+      'Les inscriptions sont fermées. Demandez un compte à l’administrateur.';
+
+  @override
+  String get totalCards => 'Cartes';
+
+  @override
+  String get toReview => 'À vérifier';
+
+  @override
+  String get pendingSection => 'En attente d’envoi';
+
+  @override
+  String get myCards => 'Mes cartes';
+
+  @override
+  String get emptyTitle => 'Aucune carte pour l’instant';
+
+  @override
+  String get emptyBody =>
+      'Scannez votre première carte de visite : le texte est lu et le contact est rempli pour vous.';
+
+  @override
+  String get scanCard => 'Scanner une carte';
+
+  @override
+  String get copied => 'Copié';
+
+  @override
+  String get deleteCard => 'Supprimer cette carte';
+
+  @override
+  String get deleted => 'Carte supprimée';
+
+  @override
+  String get refresh => 'Actualiser';
+
+  @override
+  String get favorite => 'Favori';
+
+  @override
+  String hello(String name) {
+    return 'Bonjour $name';
+  }
+
+  @override
+  String get tapToCopy => 'Touchez une valeur pour la copier';
+
+  @override
+  String get noResults => 'Aucun résultat';
 }

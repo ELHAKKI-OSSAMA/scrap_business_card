@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FileSearch, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, FileSearch, Plus, Star, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -34,9 +34,37 @@ export function DocumentListPage({ ui }: { ui: ProductUi }) {
   const q = params.get("q") ?? "";
   const [text, setText] = useState(q);
   const page = Number(params.get("page") ?? 1);
-  const filters = { q, status: params.get("status") ?? "", review_status: params.get("review_status") ?? "", language: params.get("language") ?? "", sort: params.get("sort") ?? "updated_desc", page, page_size: 20 };
+  const favOnly = params.get("fav") === "1";
+  const filters = { q, status: params.get("status") ?? "", review_status: params.get("review_status") ?? "", language: params.get("language") ?? "", favorite: favOnly ? "true" : "", sort: params.get("sort") ?? "updated_desc", page, page_size: 20 };
   const api = productApi(ui.route);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const errMsg = useErrorMessage();
   const list = useQuery({ queryKey: [ui.route, "list", filters], queryFn: () => api.list(filters), placeholderData: (p) => p });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const pageIds = list.data?.items.map((d) => d.id) ?? [];
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = () => setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => (allOnPage ? n.delete(id) : n.add(id))); return n; });
+  const refresh = () => qc.invalidateQueries({ queryKey: [ui.route] });
+  const setFavorite = async (ids: string[], favorite: boolean) => {
+    try {
+      await Promise.all(ids.map((id) => api.updateMeta(id, { favorite })));
+      await refresh();
+    } catch (e) { toast("danger", errMsg(e)); }
+  };
+  const bulkDelete = async () => {
+    setBusy(true);
+    try {
+      const r = await api.bulkDelete([...selected]);
+      toast("success", t("list.deletedCount", { count: r.deleted }));
+      setSelected(new Set());
+      setConfirmDelete(false);
+      await refresh();
+    } catch (e) { toast("danger", errMsg(e)); } finally { setBusy(false); }
+  };
   useEffect(() => {
     const h = setTimeout(() => { if (text !== q) update({ q: text, page: "" }); }, 350);
     return () => clearTimeout(h);
@@ -53,7 +81,10 @@ export function DocumentListPage({ ui }: { ui: ProductUi }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{t("nav.history")}</h1>
         <div className="flex gap-2">
-          <ExportMenu formats={ui.exportFormats} onExport={(f) => api.download(`/${ui.route}/export?format=${f}${q ? `&q=${encodeURIComponent(q)}` : ""}`, `${ui.route}.${f}`)} />
+          <Button variant={favOnly ? "primary" : "secondary"} aria-pressed={favOnly} onClick={() => update({ fav: favOnly ? "" : "1", page: "" })}>
+            <Star className={cx("size-4", favOnly && "fill-current")} aria-hidden />{t("list.favorites")}
+          </Button>
+          <ExportMenu formats={ui.exportFormats} onExport={(f) => api.download(`/${ui.route}/export?format=${f}${q ? `&q=${encodeURIComponent(q)}` : ""}${favOnly ? "&favorite=true" : ""}`, `${ui.route}.${f}`)} />
           <Link to="/new"><Button variant="primary"><Plus className="size-4" aria-hidden />{t(`${ui.i18nKey}.new`)}</Button></Link>
         </div>
       </div>
@@ -75,11 +106,27 @@ export function DocumentListPage({ ui }: { ui: ProductUi }) {
           action={!q && <Link to="/new"><Button variant="primary">{t("empty.cta")}</Button></Link>} />
       ) : (
         <>
-          <p className="text-sm text-ink-2">{t("common.results", { count: list.data.total })}</p>
+          {selected.size > 0 ? (
+            <div role="toolbar" aria-label={t("list.selection")} className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-accent bg-accent-soft px-3 py-2">
+              <span className="text-sm font-medium text-accent-ink">{t("list.selectedCount", { count: selected.size })}</span>
+              <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}><X className="size-4" aria-hidden />{t("list.clearSelection")}</Button>
+              <span className="ms-auto" />
+              <Button size="sm" onClick={() => setFavorite([...selected], true)}><Star className="size-4" aria-hidden />{t("list.addFavorite")}</Button>
+              <Button size="sm" onClick={() => setFavorite([...selected], false)}>{t("list.removeFavorite")}</Button>
+              <ExportMenu formats={ui.exportFormats} onExport={(f) => api.download(`/${ui.route}/export?format=${f}&ids=${[...selected].join(",")}`, `${ui.route}-selection.${f}`)} />
+              <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}><Trash2 className="size-4" aria-hidden />{t("common.delete")}</Button>
+            </div>
+          ) : (
+            <p className="text-sm text-ink-2">{t("common.results", { count: list.data.total })}</p>
+          )}
+          <ConfirmDialog open={confirmDelete} danger busy={busy} title={t("list.deleteSelectedTitle", { count: selected.size })} body={t("list.deleteSelectedBody")}
+            confirmLabel={t("common.delete")} onConfirm={bulkDelete} onCancel={() => setConfirmDelete(false)} />
           <div className="overflow-x-auto rounded-xl border border-line bg-surface">
             <table className="w-full text-sm">
               <thead className="bg-surface-2 text-start text-xs uppercase text-ink-2">
                 <tr>
+                  <th className="w-10 px-3 py-2"><input type="checkbox" className="size-4" checked={allOnPage} onChange={toggleAll} aria-label={t("list.selectAll")} /></th>
+                  <th className="w-10 px-1 py-2"><span className="sr-only">{t("list.favorites")}</span></th>
                   <th className="px-3 py-2 text-start font-medium">{t("common.details")}</th>
                   {ui.columns.map((c) => <th key={c.key} className="px-3 py-2 text-start font-medium">{c.label}</th>)}
                   <th className="px-3 py-2 text-start font-medium">{t("review.status")}</th>
@@ -88,7 +135,14 @@ export function DocumentListPage({ ui }: { ui: ProductUi }) {
               </thead>
               <tbody>
                 {list.data.items.map((d) => (
-                  <tr key={d.id} className="border-t border-line hover:bg-surface-2">
+                  <tr key={d.id} className={cx("border-t border-line hover:bg-surface-2", selected.has(d.id) && "bg-accent-soft/50")}>
+                    <td className="px-3 py-2"><input type="checkbox" className="size-4" checked={selected.has(d.id)} onChange={() => toggle(d.id)} aria-label={t("list.selectOne", { name: d.title ?? d.id })} /></td>
+                    <td className="px-1 py-2">
+                      <button onClick={() => setFavorite([d.id], !d.favorite)} aria-pressed={!!d.favorite} title={d.favorite ? t("list.removeFavorite") : t("list.addFavorite")}
+                        className={cx("rounded p-1", d.favorite ? "text-amber-500" : "text-ink-3 hover:text-amber-500")}>
+                        <Star className={cx("size-4", d.favorite && "fill-current")} aria-hidden />
+                      </button>
+                    </td>
                     <td className="px-3 py-2"><Link to={`/documents/${d.id}`} className="font-medium text-accent-ink underline-offset-2 hover:underline">{ui.primaryText(d)}</Link><div className="mt-0.5"><StatusBadge status={d.status} /></div></td>
                     {ui.columns.map((c) => <td key={c.key} className="px-3 py-2">{c.render(d)}</td>)}
                     <td className="px-3 py-2"><ReviewBadge status={d.review_status} /></td>
@@ -401,7 +455,7 @@ export function DocumentWorkspace<D extends { warnings: string[] }>({ ui, render
 
 // ---------------------------------------------------------------- settings
 export function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const toast = useToast();
   const errMsg = useErrorMessage();
@@ -426,6 +480,7 @@ export function SettingsPage() {
     } catch (e) { toast("danger", errMsg(e)); }
   };
   const isOwner = me.data?.role === "owner";
+  const usage = useQuery({ queryKey: ["usage"], queryFn: accountApi.usage, staleTime: 30_000 });
   const ocr = (models.data?.ocr as { provider: string; available: boolean; reason: string | null; models: { task: string; name: string; version: string | null }[] }[] | undefined) ?? [];
   const caps = (models.data?.capabilities as Record<string, string> | undefined) ?? {};
   return (
@@ -444,6 +499,27 @@ export function SettingsPage() {
         </label>
         <div><Button variant="primary" onClick={save}>{t("common.save")}</Button></div>
       </Card>
+      <Card className="flex flex-col gap-4 p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-semibold">{t("usage.title")}</h2>
+          <Button size="sm" variant="ghost" onClick={() => usage.refetch()}>{t("common.refresh")}</Button>
+        </div>
+        {usage.isLoading ? <Spinner /> : usage.isError || !usage.data ? <Alert tone="warning">{t("errors.generic")}</Alert> : (
+          <>
+            <UsageBar label={t("usage.database")} used={usage.data.database.used_bytes} limit={usage.data.database.limit_bytes} bytes />
+            <UsageBar label={t("usage.storage")} used={usage.data.storage.used_bytes} limit={usage.data.storage.limit_bytes} bytes estimated />
+            <UsageBar label={t("usage.ollamaDay")} used={usage.data.ollama.requests_today} limit={usage.data.ollama.limit_day} />
+            <UsageBar label={t("usage.ollamaMonth")} used={usage.data.ollama.requests_month} limit={usage.data.ollama.limit_month} />
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
+              <div><dt className="text-xs text-ink-3">{t("usage.documents")}</dt><dd className="font-medium">{formatNumber(usage.data.documents.active, i18n.language)}</dd></div>
+              <div><dt className="text-xs text-ink-3">{t("usage.ollama7d")}</dt><dd className="font-medium">{formatNumber(usage.data.ollama.requests_7d, i18n.language)}</dd></div>
+              <div><dt className="text-xs text-ink-3">{t("usage.keys")}</dt><dd className="font-medium">{usage.data.ollama.keys}</dd></div>
+              <div><dt className="text-xs text-ink-3">{t("usage.model")}</dt><dd className="font-mono text-xs" dir="ltr">{usage.data.ollama.model ?? "—"}</dd></div>
+            </dl>
+            <p className="text-xs text-ink-3">{t("usage.note", { mb: usage.data.vercel.max_request_mb, s: usage.data.vercel.function_timeout_s })}</p>
+          </>
+        )}
+      </Card>
       <Card className="flex flex-col gap-3 p-5">
         <h2 className="flex items-center gap-2 font-semibold"><AndroidIcon className="size-5 text-[#3DDC84]" />{t("settings.androidTitle")}</h2>
         <label className="flex flex-col gap-1 text-sm">{t("settings.androidUrl")}
@@ -461,7 +537,7 @@ export function SettingsPage() {
               <li key={p.provider} className="rounded-lg border border-line p-3">
                 <p className="font-medium" dir="ltr">{p.provider} — <span className={p.available ? "text-emerald-600" : "text-ink-3"}>{p.available ? t("settings.available") : t("settings.unavailable")}</span></p>
                 {p.reason && <p className="text-xs text-ink-3" dir="ltr">{p.reason}</p>}
-                {p.models.length > 0 && <p className="mt-1 font-mono text-xs text-ink-2" dir="ltr">{p.models.map((m) => `${m.task}: ${m.name}`).join(" · ")}</p>}
+                {(p.models?.length ?? 0) > 0 && <p className="mt-1 font-mono text-xs text-ink-2" dir="ltr">{(p.models ?? []).map((m) => `${m.task}: ${m.name}`).join(" · ")}</p>}
               </li>
             ))}
           </ul>
@@ -475,8 +551,38 @@ export function SettingsPage() {
       </Card>
       <Card className="p-5">
         <h2 className="mb-2 font-semibold">{t("settings.privacy")}</h2>
-        <p className="text-sm text-ink-2">{t("settings.privacyText")}</p>
+        <p className="text-sm text-ink-2">{ocr.some((p) => p.provider === "ollama") ? t("settings.privacyTextCloud") : t("settings.privacyText")}</p>
       </Card>
+    </div>
+  );
+}
+
+function formatBytes(n: number, lang: string): string {
+  const units = ["B", "KB", "MB", "GB"];
+  let v = n, i = 0;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return `${new Intl.NumberFormat(lang, { maximumFractionDigits: v < 10 && i > 0 ? 1 : 0 }).format(v)} ${units[i]}`;
+}
+
+/** One quota line: used / limit with a coloured bar (amber ≥ 75 %, red ≥ 90 %). Unknown limit → value only. */
+function UsageBar({ label, used, limit, bytes, estimated }: { label: string; used: number | null; limit: number | null; bytes?: boolean; estimated?: boolean }) {
+  const { t, i18n } = useTranslation();
+  const fmt = (n: number) => (bytes ? formatBytes(n, i18n.language) : formatNumber(n, i18n.language));
+  const pct = used != null && limit ? Math.min(100, (used / limit) * 100) : null;
+  const tone = pct == null ? "bg-accent" : pct >= 90 ? "bg-red-500" : pct >= 75 ? "bg-amber-500" : "bg-emerald-500";
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between gap-2 text-sm">
+        <span className="font-medium">{label}{estimated && <span className="ms-1 text-xs font-normal text-ink-3">({t("usage.estimated")})</span>}</span>
+        <span className="tabular-nums text-ink-2" dir="ltr">
+          {used == null ? "—" : fmt(used)}{limit ? ` / ${fmt(limit)}` : ""}{pct != null && ` · ${Math.round(pct)} %`}
+        </span>
+      </div>
+      {limit ? (
+        <div className="h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct == null ? undefined : Math.round(pct)}>
+          <div className={cx("h-full rounded-full transition-all", tone)} style={{ width: `${pct ?? 0}%` }} />
+        </div>
+      ) : <p className="text-xs text-ink-3">{t("usage.noLimit")}</p>}
     </div>
   );
 }

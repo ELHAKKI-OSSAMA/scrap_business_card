@@ -66,6 +66,9 @@ void main() {
   }
 
   Future<void> pumpReview(WidgetTester t, AppState s, String locale, Map<String, dynamic> result) async {
+    t.view.physicalSize = const Size(1200, 5000); // whole review list built at once
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
     final d = Draft(localId: 'bc', product: 'business_card', status: DraftStatus.completed, result: result);
     await t.pumpWidget(ChangeNotifierProvider<AppState>.value(
       value: s,
@@ -127,6 +130,6 @@ void main() {
     final s = await t.runAsync(state);
     await pumpReview(t, s!, 'en', {'full_name': fv('James Carter', c: 0.95), 'phones': [], 'emails': []});
     expect(Directionality.of(t.element(find.byType(Scaffold))), TextDirection.ltr);
-    expect(find.text('James Carter'), findsOneWidget);
+    expect(find.text('James Carter'), findsWidgets); // header + field
   });
 }

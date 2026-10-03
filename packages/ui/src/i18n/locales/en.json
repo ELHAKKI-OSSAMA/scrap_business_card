@@ -50,7 +50,8 @@
     "system": "System",
     "view": "View",
     "open": "Open",
-    "details": "Details"
+    "details": "Details",
+    "refresh": "Refresh"
   },
   "auth": {
     "signin": "Sign in",
@@ -158,7 +159,11 @@
     "notice": "Recognised text is shown exactly as read. It is never translated or rewritten.",
     "translate": "Machine translate",
     "translationNote": "Machine-generated translation — not part of the record.",
-    "translationUnavailable": "Machine translation is not configured on this server."
+    "translationUnavailable": "Machine translation is not configured on this server.",
+    "copy": "Copy",
+    "copyAll": "Copy all",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Could not copy"
   },
   "fields": {
     "evidence": "OCR evidence",
@@ -172,7 +177,10 @@
     "addItem": "Add",
     "corrected": "Corrected by a person",
     "normalized": "Normalized",
-    "source": "Source OCR region"
+    "source": "Source OCR region",
+    "phone": "Phone",
+    "email": "E-mail",
+    "address": "Address"
   },
   "export": {
     "title": "Export",
@@ -199,7 +207,21 @@
     "anyReview": "Any review status",
     "anyLanguage": "Any language",
     "created": "Created",
-    "updated": "Updated"
+    "updated": "Updated",
+    "favorites": "Favourites",
+    "addFavorite": "Add to favourites",
+    "removeFavorite": "Remove from favourites",
+    "selection": "Selection",
+    "selectAll": "Select all on this page",
+    "selectOne": "Select {{name}}",
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "clearSelection": "Clear selection",
+    "deleteSelectedTitle_one": "Delete {{count}} card?",
+    "deleteSelectedTitle_other": "Delete {{count}} cards?",
+    "deleteSelectedBody": "They disappear from the list and the mobile app, and are permanently erased after the retention period.",
+    "deletedCount_one": "{{count}} card deleted",
+    "deletedCount_other": "{{count}} cards deleted"
   },
   "delete": {
     "title": "Delete this record?",
@@ -221,7 +243,8 @@
     "androidTitle": "Android app",
     "androidUrl": "Download link (https)",
     "androidHint": "Shown as the “Android app” button in the header. Leave empty to use the server default.",
-    "ownerOnly": "Only the workspace owner can change this link."
+    "ownerOnly": "Only the workspace owner can change this link.",
+    "privacyTextCloud": "Card images and their text are sent to Ollama Cloud (Gemma model) for reading and extraction; data is stored in the project's database and storage."
   },
   "lang": {
     "en": "English",
@@ -292,7 +315,11 @@
     "ocr_correction": "An obvious OCR confusion was corrected in the structured address (l → I in a Roman numeral); the original OCR text is unchanged.",
     "qr_conflict": "The QR code disagrees with the printed card — see the QR section.",
     "qr_value_not_on_card": "The QR code contains contact data that is not printed on the card — see the QR section.",
-    "possible_partial_text": "Some text looks partly hidden or cut off; a fragment was not used as a value."
+    "possible_partial_text": "Some text looks partly hidden or cut off; a fragment was not used as a value.",
+    "llm_rejected_invalid": "{{field}}: the AI's value is not valid (e.g. a non-existent number) and was not kept.",
+    "llm_rejected_not_in_ocr_text": "{{field}}: the AI's value is not printed on the card and was not kept.",
+    "llm_rejected_other": "{{field}}: the AI's value was not kept.",
+    "cloud_ocr_repaired": "The model's answer was repaired automatically (format)."
   },
   "card": {
     "new": "New business card",
@@ -386,5 +413,19 @@
     "qr": "QR",
     "logo": "Logo",
     "text_block": "Text"
+  },
+  "usage": {
+    "title": "Usage and limits",
+    "database": "Database",
+    "storage": "Image storage",
+    "ollamaDay": "Ollama requests today",
+    "ollamaMonth": "Ollama requests this month",
+    "ollama7d": "Ollama requests (7 days)",
+    "documents": "Active cards",
+    "keys": "Ollama keys",
+    "model": "Model",
+    "estimated": "estimate",
+    "noLimit": "Limit not published by the provider — set LIMIT_OLLAMA_REQUESTS_* to show a gauge.",
+    "note": "Measured from the application's own data (providers do not expose their quotas). Vercel: requests ≤ {{mb}} MB, processing ≤ {{s}} s."
   }
 }

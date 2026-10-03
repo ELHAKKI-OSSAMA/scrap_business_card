@@ -179,6 +179,7 @@ export interface DocumentOut<D = BusinessCardData> {
   title: string | null;
   notes: string | null;
   status: DocStatus;
+  favorite?: boolean;
   review_status: ReviewStatus;
   version: number;
   languages: string[] | null;
@@ -198,11 +199,21 @@ export interface DocumentSummary {
   title: string | null;
   status: DocStatus;
   review_status: ReviewStatus;
+  favorite?: boolean;
   languages: string[] | null;
   summary: Record<string, string | null>;
   sides: Side[];
   created_at: string;
   updated_at: string;
+}
+
+export interface Usage {
+  measured_at: string;
+  documents: { active: number; workspace: number };
+  database: { used_bytes: number | null; limit_bytes: number | null };
+  storage: { used_bytes: number; limit_bytes: number | null; estimated: boolean };
+  ollama: { model: string | null; keys: number; requests_today: number; requests_month: number; requests_7d: number; limit_day: number | null; limit_month: number | null };
+  vercel: { max_request_mb: number; function_timeout_s: number };
 }
 
 export interface PageOf<T> { items: T[]; total: number; page: number; page_size: number }

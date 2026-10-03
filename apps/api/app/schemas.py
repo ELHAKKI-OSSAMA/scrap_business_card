@@ -83,6 +83,11 @@ class DocumentCreate(BaseModel):
 class DocumentMetaUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     notes: str | None = Field(default=None, max_length=5000)
+    favorite: bool | None = None
+
+
+class BulkIdsIn(BaseModel):
+    ids: list[uuid.UUID] = Field(min_length=1, max_length=500)
 
 
 class ImageOut(BaseModel):
@@ -159,6 +164,7 @@ class DocumentOut(BaseModel):
     notes: str | None
     status: str
     review_status: str
+    favorite: bool = False
     version: int
     languages: list[str] | None
     data: dict | None
@@ -177,6 +183,7 @@ class DocumentSummary(BaseModel):
     title: str | None
     status: str
     review_status: str
+    favorite: bool = False
     languages: list[str] | None
     summary: dict[str, Any]
     sides: list[str]

@@ -1,4 +1,4 @@
-import { Check, Crosshair, Download, Languages, Pencil, X } from "lucide-react";
+import { Check, ClipboardCopy, Copy, Crosshair, Download, Languages, Pencil, X } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FieldValue, Job, OcrPage, ReviewEvent } from "@ocr/shared-types";
@@ -6,7 +6,7 @@ import { accountApi } from "../lib/api";
 import { translateNote } from "../lib/notes";
 import { formatDateTime, formatNumber, formatPercent } from "../lib/format";
 import { useErrorMessage, useJob } from "../lib/hooks";
-import { Alert, Badge, Bidi, Button, ConfidenceBadge, MethodChip, ReviewBadge, Spinner, cx } from "./primitives";
+import { Alert, Badge, Bidi, Button, ConfidenceBadge, MethodChip, ReviewBadge, Spinner, cx, useToast } from "./primitives";
 
 export interface FieldActions {
   onSet: (path: string, value: unknown) => Promise<void>;
@@ -99,6 +99,18 @@ export function OcrTextPanel({ pages, selected, onSelect }: { pages: OcrPage[]; 
   const [translation, setTranslation] = useState<Record<string, string>>({});
   const [trError, setTrError] = useState<string | null>(null);
   const lines = pages.flatMap((p) => p.lines.map((l) => ({ ...l, side: p.side })));
+  const toast = useToast();
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (key: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500);
+      toast("success", t("ocr.copied"));
+    } catch {
+      toast("danger", t("ocr.copyFailed"));
+    }
+  };
   const translate = async (id: string, text: string) => {
     try {
       const r = await accountApi.translate(text, i18n.language);
@@ -112,10 +124,16 @@ export function OcrTextPanel({ pages, selected, onSelect }: { pages: OcrPage[]; 
     <div className="flex flex-col gap-2">
       <Alert tone="info">{t("ocr.notice")}</Alert>
       {trError && <Alert tone="warning">{trError}</Alert>}
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => copy("__all", lines.map((l) => l.text).filter(Boolean).join("\n"))}>
+          {copied === "__all" ? <Check className="size-4" aria-hidden /> : <ClipboardCopy className="size-4" aria-hidden />}{t("ocr.copyAll")}
+        </Button>
+      </div>
       <ol className="flex flex-col gap-1.5">
         {lines.map((l) => (
           <li key={l.id}>
-            <button onClick={() => onSelect(l.id)} aria-pressed={selected.includes(l.id)} className={cx("w-full rounded-lg border px-3 py-2 text-start", selected.includes(l.id) ? "border-amber-400 bg-amber-50 dark:bg-amber-950/40" : "border-line bg-surface hover:bg-surface-2")}>
+            <div className="flex items-stretch gap-1.5">
+            <button onClick={() => onSelect(l.id)} aria-pressed={selected.includes(l.id)} className={cx("min-w-0 flex-1 rounded-lg border px-3 py-2 text-start", selected.includes(l.id) ? "border-amber-400 bg-amber-50 dark:bg-amber-950/40" : "border-line bg-surface hover:bg-surface-2")}>
               <p dir={l.direction ?? "auto"} lang={l.language && l.language !== "und" ? l.language : undefined} className="ocr-text text-[15px] text-ink">{l.text || <span className="italic text-ink-3">∅</span>}</p>
               <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ink-3">
                 <Badge>{t(`upload.${l.side}`)}</Badge>
@@ -125,6 +143,13 @@ export function OcrTextPanel({ pages, selected, onSelect }: { pages: OcrPage[]; 
                 {l.normalized_text && l.normalized_text !== l.text && <span>· {t("ocr.normalized")}: <Bidi>{l.normalized_text}</Bidi></span>}
               </div>
             </button>
+            {l.text && (
+              <button onClick={() => copy(l.id, l.text!)} title={t("ocr.copy")} aria-label={`${t("ocr.copy")}: ${l.text}`}
+                className={cx("flex w-11 shrink-0 items-center justify-center rounded-lg border", copied === l.id ? "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40" : "border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink")}>
+                {copied === l.id ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+              </button>
+            )}
+            </div>
             {translation[l.id] ? (
               <p className="mt-1 rounded-md bg-surface-2 px-3 py-1.5 text-sm text-ink-2"><Badge tone="warning">{t("ocr.translationNote")}</Badge> <Bidi>{translation[l.id]}</Bidi></p>
             ) : (
@@ -246,7 +271,14 @@ export function WarningList({ warnings }: { warnings: string[] }) {
   const known = warnings.filter((w) => !w.includes(":") || w.split(":")[1]);
   if (!known.length) return null;
   const label = (w: string) => {
-    const [a, b] = w.split(":");
+    const [a, b, c] = w.split(":");
+    if (a === "llm_rejected" && b) {
+      // e.g. llm_rejected:phone:invalid — the AI's suggestion was not kept
+      const key = b.split(".")[0];
+      const field = t(`card.fields.${key}`, { defaultValue: t(`fields.${key}`, { defaultValue: key }) });
+      return t(`warnings.llm_rejected_${c ?? "other"}`, { field, defaultValue: t("warnings.llm_rejected_other", { field }) });
+    }
+    if (a === "cloud_ocr") return t("warnings.cloud_ocr_repaired");
     if (b && (a === "front" || a === "back")) return `${t(`upload.${a}`)}: ${t(`warnings.${b}`, { defaultValue: b })}`;
     return t(`warnings.${a}`, { defaultValue: w });
   };

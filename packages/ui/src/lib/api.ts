@@ -1,4 +1,4 @@
-import type { ApiErrorBody, Duplicate, DocumentOut, DocumentSummary, FieldChange, Job, Me, PageOf, ReviewEvent, Side } from "@ocr/shared-types";
+import type { ApiErrorBody, Duplicate, DocumentOut, DocumentSummary, FieldChange, Job, Me, PageOf, ReviewEvent, Side, Usage } from "@ocr/shared-types";
 import { shrinkForUpload } from "./image";
 
 /**
@@ -78,7 +78,7 @@ const json = async <T,>(path: string, init?: RequestInit) => (await request(path
 
 export type ProductRoute = "business-cards";
 
-export interface ListParams { q?: string; status?: string; review_status?: string; language?: string; page?: number; page_size?: number; sort?: string }
+export interface ListParams { q?: string; status?: string; review_status?: string; language?: string; favorite?: string; page?: number; page_size?: number; sort?: string }
 
 export function productApi(route: ProductRoute) {
   const base = `/${route}`;
@@ -89,7 +89,7 @@ export function productApi(route: ProductRoute) {
     },
     get: <D,>(id: string) => json<DocumentOut<D>>(`${base}/${id}`),
     create: (body: { title?: string; notes?: string; client_ref?: string }) => json<DocumentOut>(base, { method: "POST", body: JSON.stringify(body) }),
-    updateMeta: (id: string, body: { title?: string | null; notes?: string | null }) => json<DocumentOut>(`${base}/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+    updateMeta: (id: string, body: { title?: string | null; notes?: string | null; favorite?: boolean }) => json<DocumentOut>(`${base}/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
     upload: async (id: string, side: Side, file: File, onProgress?: (pct: number) => void) => uploadWithProgress(`${base}/${id}/images?side=${side}`, await shrinkForUpload(file), onProgress),
     removeImage: (id: string, side: Side) => json<DocumentOut>(`${base}/${id}/images/${side}`, { method: "DELETE" }),
     process: (id: string, body: { languages?: string[] | null; force?: boolean; use_llm?: boolean }) => json<{ job_id: string; status: string; reused: boolean }>(`${base}/${id}/process`, { method: "POST", body: JSON.stringify(body) }),
@@ -97,6 +97,7 @@ export function productApi(route: ProductRoute) {
     review: (id: string, status: string, note?: string) => json<DocumentOut>(`${base}/${id}/review`, { method: "POST", body: JSON.stringify({ status, note }) }),
     history: (id: string) => json<ReviewEvent[]>(`${base}/${id}/history`),
     remove: (id: string) => request(`${base}/${id}`, { method: "DELETE" }),
+    bulkDelete: (ids: string[]) => json<{ deleted: number }>(`${base}/bulk-delete`, { method: "POST", body: JSON.stringify({ ids }) }),
     duplicates: (id: string) => json<Duplicate[]>(`${base}/${id}/duplicates`),
     merge: (id: string, other_id: string) => json<DocumentOut>(`${base}/${id}/merge`, { method: "POST", body: JSON.stringify({ other_id, confirm: true }) }),
     imageBlobUrl: async (path: string) => URL.createObjectURL(await (await request(path.replace(API_BASE, ""))).blob()),
@@ -158,6 +159,7 @@ export const accountApi = {
     auth.clear();
   },
   me: () => json<Me>("/me"),
+  usage: () => json<Usage>("/usage"),
   authConfig: () => json<{ registration_open: boolean }>("/auth/config"),
   updateMe: (body: Partial<Pick<Me, "display_name" | "locale" | "default_phone_region">>) => json<Me>("/me", { method: "PATCH", body: JSON.stringify(body) }),
   updateWorkspaceSettings: (body: { android_app_url: string | null }) => json<Me>("/workspace/settings", { method: "PATCH", body: JSON.stringify(body) }),

@@ -61,7 +61,8 @@ def provider_status() -> list[dict]:
     if cloud_mode():
         s = get_settings()
         ok = bool(s.ollama_key_list) or not s.ollama_base_url.startswith("https://ollama.com")
-        return [{"provider": "ollama", "available": ok, "reason": None if ok else "OLLAMA_KEYS not set", "external": True, "model": s.ollama_model}]
+        return [{"provider": "ollama", "available": ok, "reason": None if ok else "OLLAMA_KEYS not set", "external": True, "model": s.ollama_model,
+                 "models": [{"task": "recognition+extraction", "name": s.ollama_model, "version": None}]}]
     from ocr_core import provider_status as status
 
     return status(ocr_settings())

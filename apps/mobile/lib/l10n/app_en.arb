@@ -99,5 +99,31 @@
         "type": "String"
       }
     }
-  }
+  },
+  "welcome": "Welcome",
+  "loginSubtitle": "Sign in to scan and manage your business cards.",
+  "advanced": "Advanced",
+  "registrationClosed": "Sign-up is closed. Ask the administrator for an account.",
+  "totalCards": "Cards",
+  "toReview": "To review",
+  "pendingSection": "Waiting to be sent",
+  "myCards": "My cards",
+  "emptyTitle": "No cards yet",
+  "emptyBody": "Scan your first business card: the text is read and the contact is filled in for you.",
+  "scanCard": "Scan a card",
+  "copied": "Copied",
+  "deleteCard": "Delete this card",
+  "deleted": "Card deleted",
+  "refresh": "Refresh",
+  "favorite": "Favourite",
+  "hello": "Hello {name}",
+  "@hello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tapToCopy": "Tap a value to copy it",
+  "noResults": "No results"
 }

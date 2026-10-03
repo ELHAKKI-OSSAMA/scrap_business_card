@@ -21,19 +21,25 @@ late Directory tmp;
 late DraftStore store;
 late StreamController<bool> conn;
 
-Future<AppState> makeState({String? locale}) async {
+Future<AppState> makeState({String? locale, bool signedIn = true}) async {
   SharedPreferences.setMockInitialValues(locale == null ? {} : {'locale': locale});
   store = DraftStore(Directory('${tmp.path}/drafts'));
   await store.load();
   conn = StreamController<bool>.broadcast();
   final server = FakeServer()..offline = true; // widget tests never touch a network
-  return AppState(
+  final s = AppState(
     prefs: await SharedPreferences.getInstance(),
     api: HttpOcrApi(baseUrl: 'http://unused.invalid', tokens: MemoryTokenStore()),
     store: store,
     sync: SyncService(store: store, api: server, pollInterval: Duration.zero, maxPolls: 1),
     connectivity: conn.stream,
   );
+  s.restoring = false;
+  if (signedIn) {
+    s.signedInEmail = 'tester@example.com';
+    s.docs = []; // server list already loaded (empty); widget tests never touch a network
+  }
+  return s;
 }
 
 AppLocalizations l10n(String code) => lookupAppLocalizations(Locale(code));
@@ -52,8 +58,37 @@ void main() {
     final l = l10n('en');
     expect(find.text(l.cardScanner), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
-    expect(find.text(l.noDrafts), findsOneWidget);
-    expect(find.text(l.notSignedIn), findsOneWidget);
+    expect(find.text(l.emptyTitle), findsOneWidget);
+    expect(find.text(l.scanCard), findsOneWidget);
+  });
+
+  testWidgets('the login screen is shown before the app when nobody is signed in', (t) async {
+    final s = await t.runAsync(() => makeState(locale: 'fr', signedIn: false));
+    await t.pumpWidget(OcrApp(state: s!));
+    await t.pumpAndSettle();
+    final l = l10n('fr');
+    expect(find.text(l.welcome), findsOneWidget);
+    expect(find.byKey(const Key('login-email')), findsOneWidget);
+    expect(find.byKey(const Key('login-submit')), findsOneWidget);
+    expect(find.text(l.scanCard), findsNothing);
+  });
+
+  testWidgets('cards from the server are listed, including those created on the web', (t) async {
+    final s = await t.runAsync(() => makeState(locale: 'en'));
+    s!.docs = [
+      DocSummary({'id': '1', 'title': null, 'status': 'completed', 'review_status': 'needs_review', 'favorite': true, 'summary': {'full_name': 'Mahmoud ATIF', 'job_title': 'Directeur', 'company': 'OMNISHORE', 'email': 'm@x.ma'}, 'updated_at': '2026-10-02T10:00:00Z'}),
+      DocSummary({'id': '2', 'title': null, 'status': 'completed', 'review_status': 'unreviewed', 'summary': {'full_name': 'Jane Roe'}, 'updated_at': '2026-10-01T10:00:00Z'}),
+    ];
+    await t.pumpWidget(OcrApp(state: s));
+    await t.pumpAndSettle();
+    final l = l10n('en');
+    expect(find.text('Mahmoud ATIF'), findsOneWidget);
+    expect(find.text('Directeur · OMNISHORE'), findsOneWidget);
+    expect(find.text('Jane Roe'), findsOneWidget);
+    expect(find.text(l.needsReview), findsOneWidget);
+    await t.enterText(find.byType(TextField), 'omni');
+    await t.pumpAndSettle();
+    expect(find.text('Jane Roe'), findsNothing);
   });
 
   testWidgets('French UI is left-to-right', (t) async {
@@ -90,7 +125,7 @@ void main() {
     expect(find.text(l10n('en').offlineBanner), findsNothing);
   });
 
-  testWidgets('draft list shows local, pending, failed and completed states and search filters', (t) async {
+  testWidgets('pending list shows local, pending and failed scans (completed ones come from the server) and search filters', (t) async {
     final s = await t.runAsync(() async {
       final s = await makeState(locale: 'en');
       await store.save(Draft(localId: 'a', product: 'business_card', title: 'Alpha'));
@@ -102,9 +137,10 @@ void main() {
     await t.pumpWidget(OcrApp(state: s!));
     await t.pumpAndSettle();
     final l = l10n('en');
-    for (final label in [l.statusLocalDraft, l.statusPendingUpload, l.statusFailed, l.statusCompleted]) {
+    for (final label in [l.statusLocalDraft, l.statusPendingUpload, l.statusFailed]) {
       expect(find.text(label), findsOneWidget);
     }
+    expect(find.text('Delta'), findsNothing); // completed: shown from the server list
     await t.enterText(find.byType(TextField), 'char');
     await t.pumpAndSettle();
     expect(find.text('Charlie'), findsOneWidget);
@@ -142,6 +178,9 @@ void main() {
       'phones': [{'original': '+212 600 000 000', 'type': 'mobile', 'e164': '+212600000000'}],
       'emails': [{'value': 'jane@example.com'}],
     });
+    t.view.physicalSize = const Size(1200, 5000);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
     await t.pumpWidget(ChangeNotifierProvider<AppState>.value(
       value: s!,
       child: MaterialApp(
@@ -153,7 +192,7 @@ void main() {
     ));
     await t.pumpAndSettle();
     final l = l10n('en');
-    expect(find.text('Jane Roe'), findsOneWidget);
+    expect(find.text('Jane Roe'), findsWidgets); // header + field
     expect(find.text(l.confidence(91)), findsOneWidget);
     expect(find.text(l.needsReview), findsOneWidget);
     expect(find.text(l.notFound), findsWidgets);

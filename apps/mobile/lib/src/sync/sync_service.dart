@@ -19,6 +19,9 @@ import 'shrink.dart';
 ///    also treats a same-hash re-upload as a no-op;
 ///  * `process` with unchanged images returns the existing job (server-side input hash).
 class SyncService extends ChangeNotifier {
+  /// Called when a scan finished on the server (completed or failed): the app reloads its list.
+  VoidCallback? onDocumentDone;
+
   SyncService({required this.store, required this.api, this.pollInterval = const Duration(seconds: 2), this.maxPolls = 90});
 
   final DraftStore store;
@@ -94,6 +97,7 @@ class SyncService extends ChangeNotifier {
             d.status = DraftStatus.completed;
             await store.save(d);
             notifyListeners();
+            onDocumentDone?.call();
             return true;
           }
           if (j.status == 'failed') {
@@ -101,6 +105,7 @@ class SyncService extends ChangeNotifier {
             d.error = j.errorCode ?? 'processing_error';
             await store.save(d);
             notifyListeners();
+            onDocumentDone?.call();
             return true;
           }
           await Future<void>.delayed(pollInterval);

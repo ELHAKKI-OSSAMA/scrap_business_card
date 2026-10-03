@@ -218,4 +218,65 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inferredNote =>
       'Inferred, not printed on the card — please confirm';
+
+  @override
+  String get welcome => 'Welcome';
+
+  @override
+  String get loginSubtitle => 'Sign in to scan and manage your business cards.';
+
+  @override
+  String get advanced => 'Advanced';
+
+  @override
+  String get registrationClosed =>
+      'Sign-up is closed. Ask the administrator for an account.';
+
+  @override
+  String get totalCards => 'Cards';
+
+  @override
+  String get toReview => 'To review';
+
+  @override
+  String get pendingSection => 'Waiting to be sent';
+
+  @override
+  String get myCards => 'My cards';
+
+  @override
+  String get emptyTitle => 'No cards yet';
+
+  @override
+  String get emptyBody =>
+      'Scan your first business card: the text is read and the contact is filled in for you.';
+
+  @override
+  String get scanCard => 'Scan a card';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get deleteCard => 'Delete this card';
+
+  @override
+  String get deleted => 'Card deleted';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get favorite => 'Favourite';
+
+  @override
+  String hello(String name) {
+    return 'Hello $name';
+  }
+
+  @override
+  String get tapToCopy => 'Tap a value to copy it';
+
+  @override
+  String get noResults => 'No results';
 }

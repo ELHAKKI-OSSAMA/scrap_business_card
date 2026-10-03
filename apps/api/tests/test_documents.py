@@ -303,3 +303,29 @@ def test_llm_requested_but_not_configured(client, alice, replay_provider):
     d = client.get(f"{BC}/{doc['id']}", headers=alice["headers"]).json()
     assert "llm_requested_but_not_configured" in d["data"]["warnings"]
     assert d["data"]["extractor"] == "rules"
+
+
+def test_favorites_bulk_export_and_delete(client, alice, bob):
+    a, b, c = (_create(client, alice, BC, title=t)["id"] for t in ("A", "B", "C"))
+    other = _create(client, bob, BC, title="other")["id"]
+    h = alice["headers"]
+    r = client.patch(f"{BC}/{a}", json={"favorite": True}, headers=h)
+    assert r.status_code == 200 and r.json()["favorite"] is True
+    favs = client.get(BC, params={"favorite": "true"}, headers=h).json()
+    assert [d["id"] for d in favs["items"]] == [a] and favs["items"][0]["favorite"] is True
+    # export of a selection: only the selected documents of this workspace
+    r = client.get(f"{BC}/export", params={"format": "json", "ids": f"{a},{b},{other}"}, headers=h)
+    assert r.status_code == 200 and sorted(d["id"] for d in r.json()) == sorted([a, b])
+    assert client.get(f"{BC}/export", params={"ids": "nope"}, headers=h).status_code == 422
+    # bulk delete never touches another workspace
+    r = client.post(f"{BC}/bulk-delete", json={"ids": [a, b, other]}, headers=h)
+    assert r.json() == {"deleted": 2}
+    assert [d["id"] for d in client.get(BC, headers=h).json()["items"]] == [c]
+    assert client.get(f"{BC}/{other}", headers=bob["headers"]).status_code == 200
+
+
+def test_usage_endpoint(client, alice):
+    u = client.get("/api/v1/usage", headers=alice["headers"]).json()
+    assert u["storage"]["limit_bytes"] == 1024 * 1024 * 1024 and u["database"]["limit_bytes"] == 500 * 1024 * 1024
+    assert {"requests_today", "requests_month", "keys"} <= set(u["ollama"])
+    assert client.get("/api/v1/usage").status_code == 401

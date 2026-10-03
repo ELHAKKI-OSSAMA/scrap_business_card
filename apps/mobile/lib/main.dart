@@ -13,6 +13,8 @@ import 'src/app_state.dart';
 import 'src/drafts/draft_store.dart';
 import 'src/sync/sync_service.dart';
 import 'src/ui/home_screen.dart';
+import 'src/ui/login_screen.dart';
+import 'src/ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,11 +52,27 @@ class OcrApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          theme: ThemeData(colorSchemeSeed: const Color(0xFF1F4FD8), useMaterial3: true, brightness: Brightness.light),
-          darkTheme: ThemeData(colorSchemeSeed: const Color(0xFF1F4FD8), useMaterial3: true, brightness: Brightness.dark),
-          home: const HomeScreen(),
+          theme: appTheme(Brightness.light),
+          darkTheme: appTheme(Brightness.dark),
+          home: const AuthGate(),
         ),
       ),
     );
+  }
+}
+
+/// Splash while the stored session is checked, then the login screen or the app.
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<AppState>();
+    final Widget child = s.restoring
+        ? const SplashScreen()
+        : s.signedInEmail == null
+            ? const LoginScreen()
+            : const HomeScreen();
+    return AnimatedSwitcher(duration: const Duration(milliseconds: 250), child: KeyedSubtree(key: ValueKey(child.runtimeType), child: child));
   }
 }

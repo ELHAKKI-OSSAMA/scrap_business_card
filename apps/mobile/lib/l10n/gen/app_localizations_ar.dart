@@ -216,4 +216,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get inferredNote => 'مستنتج وغير مطبوع على البطاقة — يرجى التأكيد';
+
+  @override
+  String get welcome => 'مرحبًا';
+
+  @override
+  String get loginSubtitle => 'سجّل الدخول لمسح بطاقات الأعمال وإدارتها.';
+
+  @override
+  String get advanced => 'متقدم';
+
+  @override
+  String get registrationClosed => 'التسجيل مغلق. اطلب حسابًا من المسؤول.';
+
+  @override
+  String get totalCards => 'البطاقات';
+
+  @override
+  String get toReview => 'للمراجعة';
+
+  @override
+  String get pendingSection => 'في انتظار الإرسال';
+
+  @override
+  String get myCards => 'بطاقاتي';
+
+  @override
+  String get emptyTitle => 'لا توجد بطاقات بعد';
+
+  @override
+  String get emptyBody =>
+      'امسح أول بطاقة أعمال: تتم قراءة النص وملء جهة الاتصال تلقائيًا.';
+
+  @override
+  String get scanCard => 'مسح بطاقة';
+
+  @override
+  String get copied => 'تم النسخ';
+
+  @override
+  String get deleteCard => 'حذف هذه البطاقة';
+
+  @override
+  String get deleted => 'تم حذف البطاقة';
+
+  @override
+  String get refresh => 'تحديث';
+
+  @override
+  String get favorite => 'مفضلة';
+
+  @override
+  String hello(String name) {
+    return 'مرحبًا $name';
+  }
+
+  @override
+  String get tapToCopy => 'المس قيمة لنسخها';
+
+  @override
+  String get noResults => 'لا توجد نتائج';
 }

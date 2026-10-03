@@ -29,6 +29,7 @@ from app.products import ProductSpec
 from app.ratelimit import check_rate
 from app.scanning import scan_bytes
 from app.schemas import (
+    BulkIdsIn,
     DocumentCreate,
     DocumentMetaUpdate,
     DocumentOut,
@@ -113,7 +114,7 @@ def _doc_out(db: Session, spec: ProductSpec, doc: Document, *, detail: bool = Fa
         er = db.scalar(select(ExtractionResult).where(ExtractionResult.job_id == doc.latest_run_id))
         machine = er.data if er else None
     return DocumentOut(
-        id=doc.id, product=doc.product, client_ref=doc.client_ref, title=doc.title, notes=doc.notes, status=doc.status, review_status=doc.review_status,
+        id=doc.id, product=doc.product, client_ref=doc.client_ref, title=doc.title, notes=doc.notes, status=doc.status, review_status=doc.review_status, favorite=bool(doc.favorite),
         version=doc.version, languages=doc.languages, data=doc.data, machine_data=machine,
         images=[_image_out(spec, doc, i) for i in sorted(doc.images, key=lambda i: i.side != "front")],
         latest_job=JobOut.model_validate(job) if job else None, ocr=_ocr_pages(db, doc) if detail else None,
@@ -123,7 +124,7 @@ def _doc_out(db: Session, spec: ProductSpec, doc: Document, *, detail: bool = Fa
 
 def _summary(spec: ProductSpec, doc: Document) -> DocumentSummary:
     return DocumentSummary(
-        id=doc.id, product=doc.product, title=doc.title, status=doc.status, review_status=doc.review_status, languages=doc.languages,
+        id=doc.id, product=doc.product, title=doc.title, status=doc.status, review_status=doc.review_status, favorite=bool(doc.favorite), languages=doc.languages,
         summary=spec.summary(doc.data), sides=sorted((i.side for i in doc.images), key=lambda s: s != "front"), created_at=doc.created_at, updated_at=doc.updated_at,
     )
 
@@ -168,6 +169,7 @@ def make_router(spec: ProductSpec) -> APIRouter:
         q: str | None = Query(default=None, max_length=200, description="Accent-, case- and Arabic-diacritic-insensitive search"),
         status_: str | None = Query(default=None, alias="status"),
         review_status: str | None = None,
+        favorite: bool | None = Query(default=None, description="Only favourites (true) / non-favourites (false)"),
         language: Literal["ar", "fr", "en"] | None = None,
         created_from: datetime | None = None,
         created_to: datetime | None = None,
@@ -185,6 +187,8 @@ def make_router(spec: ProductSpec) -> APIRouter:
             conds.append(Document.status == status_)
         if review_status:
             conds.append(Document.review_status == review_status)
+        if favorite is not None:
+            conds.append(Document.favorite.is_(favorite))
         if created_from:
             conds.append(Document.created_at >= created_from)
         if created_to:
@@ -209,17 +213,45 @@ def make_router(spec: ProductSpec) -> APIRouter:
         return Page(items=[_summary(spec, d) for d in items], total=total, page=page, page_size=page_size)
 
     @r.get("/export", summary=f"Bulk export {label}s", response_class=Response)
-    def export_many(request: Request, format: Literal["csv", "json", "vcf"] = "csv", q: str | None = Query(default=None, max_length=200), p: Principal = Depends(get_principal), db: Session = Depends(get_db)):
+    def export_many(
+        request: Request,
+        format: Literal["csv", "json", "vcf"] = "csv",
+        q: str | None = Query(default=None, max_length=200),
+        ids: str | None = Query(default=None, max_length=20000, description="Comma-separated document ids (selection)"),
+        favorite: bool | None = None,
+        p: Principal = Depends(get_principal),
+        db: Session = Depends(get_db),
+    ):
         if format not in spec.export_formats:
             raise ApiError(422, "unsupported_format", f"Format '{format}' is not available for this product.")
         conds = [Document.workspace_id == p.workspace.id, Document.product == spec.key, Document.deleted_at.is_(None)]
         if q:
             for term in normalize_search(q).split()[:8]:
                 conds.append(Document.search_text.contains(term, autoescape=True))
+        if ids:
+            try:
+                wanted = [uuid.UUID(x) for x in ids.split(",") if x.strip()][:500]
+            except ValueError as exc:
+                raise ApiError(422, "invalid_ids", "ids must be comma-separated UUIDs.") from exc
+            conds.append(Document.id.in_(wanted))
+        if favorite is not None:
+            conds.append(Document.favorite.is_(favorite))
         docs = db.scalars(select(Document).where(and_(*conds)).order_by(Document.updated_at.desc()).limit(5000)).all()
         audit(db, f"{spec.key}.export_bulk", user=p.user, workspace_id=p.workspace.id, ip=client_ip(request), format=format, count=len(docs))
         db.commit()
         return _export_response(spec, [_export_dict(d) for d in docs], format, f"{spec.route}-export")
+
+    @r.post("/bulk-delete", summary=f"Delete several {label}s (soft delete)")
+    def bulk_delete(body: BulkIdsIn, request: Request, p: Principal = Depends(require_editor), db: Session = Depends(get_db)):
+        docs = db.scalars(select(Document).where(Document.workspace_id == p.workspace.id, Document.product == spec.key,
+                                                 Document.deleted_at.is_(None), Document.id.in_(body.ids))).all()
+        now = datetime.now(timezone.utc)
+        for doc in docs:
+            doc.deleted_at = now
+            db.query(DocumentKey).filter(DocumentKey.document_id == doc.id).delete()
+        audit(db, f"{spec.key}.delete_bulk", user=p.user, workspace_id=p.workspace.id, ip=client_ip(request), count=len(docs))
+        db.commit()
+        return {"deleted": len(docs)}
 
     @r.get("/{doc_id}", response_model=DocumentOut, summary=f"Get a {label} with OCR regions")
     def get_doc(doc_id: uuid.UUID, p: Principal = Depends(get_principal), db: Session = Depends(get_db)):

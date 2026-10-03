@@ -32,6 +32,22 @@ class RemoteDoc {
   Map<String, dynamic>? get data => json['data'] as Map<String, dynamic>?;
 }
 
+/// One row of the server list (`GET /{route}`): the source of truth for what exists.
+class DocSummary {
+  DocSummary(this.json);
+  final Map<String, dynamic> json;
+  String get id => json['id'] as String;
+  String? get title => json['title'] as String?;
+  String get status => json['status'] as String? ?? 'draft';
+  String get reviewStatus => json['review_status'] as String? ?? 'unreviewed';
+  bool get favorite => json['favorite'] as bool? ?? false;
+  Map<String, dynamic> get summary => (json['summary'] as Map?)?.cast<String, dynamic>() ?? const {};
+  DateTime get updatedAt => DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now();
+  String? s(String k) => (summary[k] as String?)?.trim().isEmpty ?? true ? null : (summary[k] as String).trim();
+  String get displayName => s('full_name') ?? s('arabic_name') ?? title ?? s('company') ?? '—';
+  String get searchText => [title, ...summary.values.whereType<String>()].whereType<String>().join(' ').toLowerCase();
+}
+
 class JobStatus {
   JobStatus(this.id, this.status, {this.errorCode, this.errorMessage});
   final String id;
@@ -147,6 +163,33 @@ class HttpOcrApi implements OcrApi {
       try {
         await _client.post(_u('/auth/logout'), headers: {'Content-Type': 'application/json'}, body: jsonEncode({'refresh_token': rt})).timeout(const Duration(seconds: 5));
       } catch (_) {}
+    }
+  }
+
+  /// All documents of the workspace (newest first), up to [max].
+  Future<List<DocSummary>> listDocuments(String route, {int max = 500}) async {
+    final out = <DocSummary>[];
+    for (var page = 1; out.length < max; page++) {
+      final j = _json(await _authed((h) => _client.get(_u('/$route?page=$page&page_size=100&sort=updated_desc'), headers: h)));
+      final items = (j['items'] as List).cast<Map<String, dynamic>>().map(DocSummary.new).toList();
+      out.addAll(items);
+      if (items.length < 100 || out.length >= (j['total'] as int)) break;
+    }
+    return out;
+  }
+
+  Future<void> deleteDocument(String route, String id) async {
+    await _authed((h) => _client.delete(_u('/$route/$id'), headers: h));
+  }
+
+  /// Is self-registration open on this server? (`GET /auth/config`; old servers: assume yes)
+  Future<bool> registrationOpen() async {
+    try {
+      final r = await _send(() => _client.get(_u('/auth/config')));
+      if (r.statusCode != 200) return true;
+      return _json(r)['registration_open'] as bool? ?? true;
+    } on NetworkException {
+      return false;
     }
   }
 

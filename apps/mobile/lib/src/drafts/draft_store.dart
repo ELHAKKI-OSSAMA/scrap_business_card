@@ -36,10 +36,27 @@ class DraftStore extends ChangeNotifier {
 
   Draft? byId(String id) => _drafts.where((d) => d.localId == id).firstOrNull;
 
-  Future<void> _flush() async {
+  Future<void> _pending = Future.value();
+
+  /// Writes are serialised: two overlapping saves (sync + UI) must not race on the temp file.
+  Future<void> _flush() {
+    final next = _pending.then((_) => _write(), onError: (_) => _write());
+    _pending = next.catchError((_) {});
+    return next;
+  }
+
+  Future<void> _write() async {
     final tmp = File('${_index.path}.tmp');
     await tmp.writeAsString(jsonEncode(_drafts.map((d) => d.toJson()).toList()), flush: true);
-    await tmp.rename(_index.path);
+    for (var i = 0; ; i++) {
+      try {
+        await tmp.rename(_index.path);
+        return;
+      } on FileSystemException {
+        if (i >= 5) rethrow; // Windows can hold the target briefly (indexer / antivirus)
+        await Future<void>.delayed(Duration(milliseconds: 20 * (i + 1)));
+      }
+    }
   }
 
   Future<Draft> save(Draft d) async {

@@ -50,7 +50,8 @@
     "system": "Système",
     "view": "Voir",
     "open": "Ouvrir",
-    "details": "Détails"
+    "details": "Détails",
+    "refresh": "Actualiser"
   },
   "auth": {
     "signin": "Se connecter",
@@ -158,7 +159,11 @@
     "notice": "Le texte reconnu est affiché tel quel. Il n'est jamais traduit ni réécrit.",
     "translate": "Traduction automatique",
     "translationNote": "Traduction générée automatiquement — ne fait pas partie de la fiche.",
-    "translationUnavailable": "La traduction automatique n'est pas configurée sur ce serveur."
+    "translationUnavailable": "La traduction automatique n'est pas configurée sur ce serveur.",
+    "copy": "Copier",
+    "copyAll": "Tout copier",
+    "copied": "Copié dans le presse-papiers",
+    "copyFailed": "Copie impossible"
   },
   "fields": {
     "evidence": "Preuve OCR",
@@ -172,7 +177,10 @@
     "addItem": "Ajouter",
     "corrected": "Corrigé par une personne",
     "normalized": "Valeur normalisée",
-    "source": "Région OCR source"
+    "source": "Région OCR source",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "address": "Adresse"
   },
   "export": {
     "title": "Exporter",
@@ -199,7 +207,21 @@
     "anyReview": "Toute relecture",
     "anyLanguage": "Toutes langues",
     "created": "Créé",
-    "updated": "Modifié"
+    "updated": "Modifié",
+    "favorites": "Favoris",
+    "addFavorite": "Ajouter aux favoris",
+    "removeFavorite": "Retirer des favoris",
+    "selection": "Sélection",
+    "selectAll": "Tout sélectionner sur la page",
+    "selectOne": "Sélectionner {{name}}",
+    "selectedCount_one": "{{count}} sélectionnée",
+    "selectedCount_other": "{{count}} sélectionnées",
+    "clearSelection": "Désélectionner",
+    "deleteSelectedTitle_one": "Supprimer {{count}} carte ?",
+    "deleteSelectedTitle_other": "Supprimer {{count}} cartes ?",
+    "deleteSelectedBody": "Elles disparaîtront de la liste et de l’application mobile, puis seront définitivement effacées après la période de conservation.",
+    "deletedCount_one": "{{count}} carte supprimée",
+    "deletedCount_other": "{{count}} cartes supprimées"
   },
   "delete": {
     "title": "Supprimer cette fiche ?",
@@ -221,7 +243,8 @@
     "androidTitle": "Application Android",
     "androidUrl": "Lien de téléchargement (https)",
     "androidHint": "Affiché dans le bouton « Application Android » en haut de page. Laissez vide pour utiliser le lien par défaut du serveur.",
-    "ownerOnly": "Seul le propriétaire de l’espace peut modifier ce lien."
+    "ownerOnly": "Seul le propriétaire de l’espace peut modifier ce lien.",
+    "privacyTextCloud": "Les images des cartes et leur texte sont envoyés à Ollama Cloud (modèle Gemma) pour la lecture et l’extraction ; les données sont stockées dans la base et le stockage du projet."
   },
   "lang": {
     "en": "English",
@@ -292,7 +315,11 @@
     "ocr_correction": "Une confusion OCR évidente a été corrigée dans l’adresse structurée (l → I dans un chiffre romain) ; le texte OCR d’origine est inchangé.",
     "qr_conflict": "Le QR code ne concorde pas avec la carte imprimée — voir la section QR.",
     "qr_value_not_on_card": "Le QR code contient des coordonnées absentes de la carte imprimée — voir la section QR.",
-    "possible_partial_text": "Du texte semble partiellement masqué ou coupé ; un fragment n’a pas été utilisé comme valeur."
+    "possible_partial_text": "Du texte semble partiellement masqué ou coupé ; un fragment n’a pas été utilisé comme valeur.",
+    "llm_rejected_invalid": "{{field}} : la valeur proposée par l’IA n’est pas valide (ex. numéro inexistant) ; elle n’a pas été retenue.",
+    "llm_rejected_not_in_ocr_text": "{{field}} : la valeur proposée par l’IA ne figure pas sur la carte ; elle n’a pas été retenue.",
+    "llm_rejected_other": "{{field}} : la valeur proposée par l’IA n’a pas été retenue.",
+    "cloud_ocr_repaired": "La réponse du modèle a été corrigée automatiquement (format)."
   },
   "card": {
     "new": "Nouvelle carte de visite",
@@ -386,5 +413,19 @@
     "qr": "QR",
     "logo": "Logo",
     "text_block": "Texte"
+  },
+  "usage": {
+    "title": "Consommation et limites",
+    "database": "Base de données",
+    "storage": "Stockage des images",
+    "ollamaDay": "Requêtes Ollama aujourd’hui",
+    "ollamaMonth": "Requêtes Ollama ce mois-ci",
+    "ollama7d": "Requêtes Ollama (7 jours)",
+    "documents": "Cartes actives",
+    "keys": "Clés Ollama",
+    "model": "Modèle",
+    "estimated": "estimation",
+    "noLimit": "Limite non communiquée par le fournisseur — définissez LIMIT_OLLAMA_REQUESTS_* pour afficher une jauge.",
+    "note": "Mesuré à partir des données de l’application (les fournisseurs n’exposent pas leurs quotas). Vercel : requêtes ≤ {{mb}} Mo, traitement ≤ {{s}} s."
   }
 }

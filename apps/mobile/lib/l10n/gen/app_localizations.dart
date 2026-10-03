@@ -489,6 +489,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inferred, not printed on the card — please confirm'**
   String get inferredNote;
+
+  /// No description provided for @welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get welcome;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to scan and manage your business cards.'**
+  String get loginSubtitle;
+
+  /// No description provided for @advanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advanced;
+
+  /// No description provided for @registrationClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-up is closed. Ask the administrator for an account.'**
+  String get registrationClosed;
+
+  /// No description provided for @totalCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get totalCards;
+
+  /// No description provided for @toReview.
+  ///
+  /// In en, this message translates to:
+  /// **'To review'**
+  String get toReview;
+
+  /// No description provided for @pendingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be sent'**
+  String get pendingSection;
+
+  /// No description provided for @myCards.
+  ///
+  /// In en, this message translates to:
+  /// **'My cards'**
+  String get myCards;
+
+  /// No description provided for @emptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No cards yet'**
+  String get emptyTitle;
+
+  /// No description provided for @emptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your first business card: the text is read and the contact is filled in for you.'**
+  String get emptyBody;
+
+  /// No description provided for @scanCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a card'**
+  String get scanCard;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @deleteCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this card'**
+  String get deleteCard;
+
+  /// No description provided for @deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Card deleted'**
+  String get deleted;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @favorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favourite'**
+  String get favorite;
+
+  /// No description provided for @hello.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {name}'**
+  String hello(String name);
+
+  /// No description provided for @tapToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a value to copy it'**
+  String get tapToCopy;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get noResults;
 }
 
 class _AppLocalizationsDelegate

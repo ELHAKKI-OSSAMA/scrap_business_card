@@ -94,6 +94,11 @@ class Settings(BaseSettings):
     cron_secret: str | None = None
     # default "Android app" link in the web app; each workspace owner can override it in Settings
     android_app_url: str | None = None
+    # plan limits shown in Settings → Usage (defaults = Supabase Free; 0 = unknown / not shown)
+    limit_db_mb: int = 500
+    limit_storage_mb: int = 1024
+    limit_ollama_requests_day: int = 0
+    limit_ollama_requests_month: int = 0
 
     @field_validator("cors_origins", mode="before")
     @classmethod

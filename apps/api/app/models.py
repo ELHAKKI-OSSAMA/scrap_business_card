@@ -72,6 +72,7 @@ class Document(Base):
     notes: Mapped[str | None] = mapped_column(Text)  # transcription notes
     status: Mapped[str] = mapped_column(String(16), default="draft")  # draft|ready|queued|processing|completed|failed
     review_status: Mapped[str] = mapped_column(String(16), default="unreviewed")
+    favorite: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     data: Mapped[dict | None] = mapped_column(JsonType)  # current values = machine output + corrections
     languages: Mapped[list | None] = mapped_column(JsonType)
     search_text: Mapped[str | None] = mapped_column(Text)
