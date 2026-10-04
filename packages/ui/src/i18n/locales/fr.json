@@ -14,7 +14,8 @@
     "skip": "Aller au contenu",
     "menu": "Menu",
     "android": "Application Android",
-    "androidHint": "Télécharger l’application Android"
+    "androidHint": "Télécharger l’application Android",
+    "phone": "Caméra téléphone"
   },
   "common": {
     "save": "Enregistrer",
@@ -430,5 +431,22 @@
     "ollamaWeek": "Requêtes Ollama (7 derniers jours)",
     "ollamaWeekHint": "Le quota gratuit d’Ollama Cloud se renouvelle chaque semaine. Limite estimée et réglable (LIMIT_OLLAMA_REQUESTS_WEEK) ; le pourcentage exact est sur ollama.com → Usage.",
     "warning": "Attention, limite bientôt atteinte :"
+  },
+  "phone": {
+    "title": "Téléphone comme caméra",
+    "sendTab": "Ce téléphone photographie",
+    "receiveTab": "Ce PC reçoit",
+    "sendHint": "Photographiez les cartes à la chaîne : chaque carte part tout de suite et s’affiche sur votre PC (même compte).",
+    "shootFront": "Photographier une carte",
+    "frontReady": "Recto pris",
+    "sendNow": "Envoyer (recto seul)",
+    "addBack": "Ajouter le verso puis envoyer",
+    "retake": "Reprendre",
+    "cardN": "Carte {{n}}",
+    "listening": "En écoute — les cartes envoyées depuis votre téléphone apparaissent ici",
+    "receiveHint": "Sur votre téléphone, connecté au même compte, ouvrez cette adresse (ou le menu « Caméra téléphone ») :",
+    "autoOpen": "Ouvrir automatiquement chaque carte analysée",
+    "waiting": "En attente d’une carte…",
+    "newCard": "Nouvelle carte"
   }
 }

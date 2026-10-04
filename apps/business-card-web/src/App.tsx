@@ -5,6 +5,7 @@ import { AppShell, AuthGate, Bidi, DashboardPage, DocumentListPage, DocumentWork
 import { BatchUpload } from "./components/BatchUpload";
 import { CardFields } from "./components/CardFields";
 import { Duplicates } from "./components/Duplicates";
+import { PhoneCameraPage } from "./components/PhoneCamera";
 
 function Logo() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/new" element={<div className="flex flex-col gap-6"><NewDocumentPage ui={ui} /><div className="mx-auto w-full max-w-4xl"><BatchUpload /></div></div>} />
           <Route path="/history" element={<DocumentListPage ui={ui} />} />
           <Route path="/documents/:id" element={<DocumentWorkspace<BusinessCardData> ui={ui} renderFields={(p) => <CardFields {...p} />} renderAside={(p) => <Duplicates docId={p.doc.id} />} />} />
+          <Route path="/phone" element={<PhoneCameraPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<DashboardPage ui={ui} />} />
         </Routes>

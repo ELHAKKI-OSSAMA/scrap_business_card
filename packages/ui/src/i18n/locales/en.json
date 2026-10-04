@@ -14,7 +14,8 @@
     "skip": "Skip to content",
     "menu": "Menu",
     "android": "Android app",
-    "androidHint": "Download the Android app"
+    "androidHint": "Download the Android app",
+    "phone": "Phone camera"
   },
   "common": {
     "save": "Save",
@@ -430,5 +431,22 @@
     "ollamaWeek": "Ollama requests (last 7 days)",
     "ollamaWeekHint": "Ollama Cloud free usage resets weekly. Estimated, adjustable limit (LIMIT_OLLAMA_REQUESTS_WEEK); the exact percentage is on ollama.com → Usage.",
     "warning": "Warning, limit almost reached:"
+  },
+  "phone": {
+    "title": "Phone as camera",
+    "sendTab": "This phone shoots",
+    "receiveTab": "This PC receives",
+    "sendHint": "Shoot cards one after another: each card is sent immediately and shows up on your PC (same account).",
+    "shootFront": "Photograph a card",
+    "frontReady": "Front captured",
+    "sendNow": "Send (front only)",
+    "addBack": "Add the back, then send",
+    "retake": "Retake",
+    "cardN": "Card {{n}}",
+    "listening": "Listening — cards sent from your phone appear here",
+    "receiveHint": "On your phone, signed in to the same account, open this address (or the “Phone camera” menu):",
+    "autoOpen": "Automatically open each analysed card",
+    "waiting": "Waiting for a card…",
+    "newCard": "New card"
   }
 }
