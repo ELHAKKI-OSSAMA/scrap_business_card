@@ -24,6 +24,7 @@ from app.db import get_db
 from app.deps import Principal, audit, client_ip, get_principal, require_editor
 from app.errors import ApiError
 from app.jobs import dispatch
+from app.services.retention import hard_delete
 from app.models import Document, DocumentImage, DocumentKey, ExtractionResult, OcrRegion, ProcessingJob, ReviewEvent
 from app.products import ProductSpec
 from app.ratelimit import check_rate
@@ -244,14 +245,13 @@ def make_router(spec: ProductSpec) -> APIRouter:
         db.commit()
         return _export_response(spec, [_export_dict(d) for d in docs], format, f"{spec.route}-export")
 
-    @r.post("/bulk-delete", summary=f"Delete several {label}s (soft delete)")
+    @r.post("/bulk-delete", summary=f"Permanently delete several {label}s (rows and images)")
     def bulk_delete(body: BulkIdsIn, request: Request, p: Principal = Depends(require_editor), db: Session = Depends(get_db)):
         docs = db.scalars(select(Document).where(Document.workspace_id == p.workspace.id, Document.product == spec.key,
                                                  Document.deleted_at.is_(None), Document.id.in_(body.ids))).all()
-        now = datetime.now(timezone.utc)
         for doc in docs:
-            doc.deleted_at = now
             db.query(DocumentKey).filter(DocumentKey.document_id == doc.id).delete()
+            hard_delete(db, doc)
         audit(db, f"{spec.key}.delete_bulk", user=p.user, workspace_id=p.workspace.id, ip=client_ip(request), count=len(docs))
         db.commit()
         return {"deleted": len(docs)}
@@ -422,11 +422,11 @@ def make_router(spec: ProductSpec) -> APIRouter:
         db.commit()
         return _export_response(spec, [_export_dict(doc)], format, f"{spec.key}-{doc.id}")
 
-    @r.delete("/{doc_id}", status_code=status.HTTP_204_NO_CONTENT, summary=f"Delete a {label} (soft delete, purged after the retention period)")
+    @r.delete("/{doc_id}", status_code=status.HTTP_204_NO_CONTENT, summary=f"Permanently delete a {label} (rows and images)")
     def delete_doc(doc_id: uuid.UUID, request: Request, p: Principal = Depends(require_editor), db: Session = Depends(get_db)):
         doc = _get_doc(db, p, spec, doc_id)
-        doc.deleted_at = datetime.now(timezone.utc)
         db.query(DocumentKey).filter(DocumentKey.document_id == doc.id).delete()
+        hard_delete(db, doc)
         audit(db, f"{spec.key}.delete", user=p.user, workspace_id=p.workspace.id, target_type="document", target_id=str(doc.id), ip=client_ip(request))
         db.commit()
         return Response(status_code=204)

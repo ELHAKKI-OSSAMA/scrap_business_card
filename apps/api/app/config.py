@@ -88,6 +88,7 @@ class Settings(BaseSettings):
     # retention
     deleted_retention_days: int = 30
     document_retention_days: int = 0  # 0 = keep until deleted
+    draft_retention_hours: int = 24  # never-processed drafts (0 = keep)
 
     metrics_enabled: bool = True
     # Vercel Cron sends "Authorization: Bearer $CRON_SECRET" to /api/v1/internal/retention

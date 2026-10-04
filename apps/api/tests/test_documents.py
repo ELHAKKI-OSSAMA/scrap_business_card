@@ -256,32 +256,41 @@ def test_duplicates_suggested_not_merged(client, alice, replay_provider):
     assert client.get(f"{BC}/{b['id']}", headers=alice["headers"]).status_code == 404
 
 
-def test_soft_delete(client, alice, replay_provider):
+def test_delete_is_permanent(client, alice, replay_provider):
+    from app.db import get_sessionmaker
+    from app.models import Document, DocumentImage, OcrRegion
+    from app.storage import get_storage
+
     d = _processed_card(client, alice, replay_provider)
+    with get_sessionmaker()() as db:
+        keys = [k for i in db.query(DocumentImage).filter(DocumentImage.document_id == uuid.UUID(d["id"])) for k in (i.storage_key, i.processed_key) if k]
+    def exists(k):
+        try:
+            get_storage().get(k)
+            return True
+        except Exception:
+            return False
+
+    assert keys and all(exists(k) for k in keys)
     assert client.delete(f"{BC}/{d['id']}", headers=alice["headers"]).status_code == 204
     assert client.get(f"{BC}/{d['id']}", headers=alice["headers"]).status_code == 404
-    from app.db import get_sessionmaker
-    from app.models import Document
-
     with get_sessionmaker()() as db:
-        assert db.get(Document, uuid.UUID(d["id"])).deleted_at is not None
+        assert db.get(Document, uuid.UUID(d["id"])) is None
+        assert db.query(OcrRegion).filter(OcrRegion.document_id == uuid.UUID(d["id"])).count() == 0
+    assert not any(exists(k) for k in keys)
 
 
-def test_retention_purge(client, alice, replay_provider, monkeypatch):
+def test_retention_purges_abandoned_drafts(client, alice):
     from datetime import datetime, timedelta, timezone
 
     from app.services.retention import purge
 
-    d = _processed_card(client, alice, replay_provider)
-    client.delete(f"{BC}/{d['id']}", headers=alice["headers"])
-    assert purge()["purged"] == 0 or True  # retention window not reached for this doc
-    res = purge(now=datetime.now(timezone.utc) + timedelta(days=31))
-    assert res["purged"] >= 1
-    from app.db import get_sessionmaker
-    from app.models import Document
-
-    with get_sessionmaker()() as db:
-        assert db.get(Document, uuid.UUID(d["id"])) is None
+    doc = client.post(BC, json={}, headers=alice["headers"]).json()
+    client.post(f"{BC}/{doc['id']}/images?side=front", files={"file": ("c.png", png_bytes(), "image/png")}, headers=alice["headers"])
+    purge()
+    assert client.get(f"{BC}/{doc['id']}", headers=alice["headers"]).status_code == 200  # still fresh
+    purge(now=datetime.now(timezone.utc) + timedelta(hours=25))
+    assert client.get(f"{BC}/{doc['id']}", headers=alice["headers"]).status_code == 404
 
 
 def test_models_endpoint_is_honest_about_handwriting(client, alice):
