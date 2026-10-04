@@ -15,7 +15,7 @@
     "menu": "Menu",
     "android": "Application Android",
     "androidHint": "Télécharger l’application Android",
-    "phone": "Caméra téléphone"
+    "phone": "Caméra pour le PC"
   },
   "common": {
     "save": "Enregistrer",
@@ -119,7 +119,7 @@
     "fromPc": "Fichier du PC",
     "fromPhone": "Caméra du téléphone",
     "phoneWaiting": "Prenez la photo avec votre téléphone…",
-    "phoneWaitingHint": "Sur le téléphone (même compte) : app → « Caméra pour le PC », ou site → « Caméra téléphone ». La photo apparaîtra ici.",
+    "phoneWaitingHint": "Sur le téléphone (même compte) : app ou site → « Caméra pour le PC ». La photo apparaîtra ici.",
     "pcAsks": "Le PC demande : {{side}}",
     "shootForPc": "Photographier pour le PC"
   },
@@ -395,7 +395,9 @@
       "conflict": "Différent — à vérifier",
       "qr_only": "Uniquement dans le QR code"
     },
-    "qrConflictNote": "Le QR code et le texte imprimé ne concordent pas. Rien n’a été modifié automatiquement ; choisissez la bonne valeur."
+    "qrConflictNote": "Le QR code et le texte imprimé ne concordent pas. Rien n’a été modifié automatiquement ; choisissez la bonne valeur.",
+    "batchPhoneWaiting": "Photographiez les cartes une par une avec votre téléphone… ({{n}} reçue(s))",
+    "batchPhoneStop": "Terminer"
   },
   "notes": {
     "honorific": "Civilité imprimée avant le nom : {{v}}",
@@ -439,21 +441,10 @@
     "warning": "Attention, limite bientôt atteinte :"
   },
   "phone": {
-    "title": "Téléphone comme caméra",
-    "sendTab": "Ce téléphone photographie",
-    "receiveTab": "Ce PC reçoit",
-    "sendHint": "Photographiez les cartes à la chaîne : chaque carte part tout de suite et s’affiche sur votre PC (même compte).",
-    "shootFront": "Photographier une carte",
-    "frontReady": "Recto pris",
-    "sendNow": "Envoyer (recto seul)",
-    "addBack": "Ajouter le verso puis envoyer",
-    "retake": "Reprendre",
-    "cardN": "Carte {{n}}",
-    "listening": "En écoute — les cartes envoyées depuis votre téléphone apparaissent ici",
-    "receiveHint": "Sur votre téléphone, connecté au même compte, ouvrez cette adresse (ou le menu « Caméra téléphone ») :",
-    "autoOpen": "Ouvrir automatiquement chaque carte analysée",
-    "waiting": "En attente d’une carte…",
-    "newCard": "Nouvelle carte",
-    "sending": "Envoi…"
+    "title": "Caméra pour le PC",
+    "waitingPc": "En attente d’une demande du PC…",
+    "waitingPcHint": "Sur le PC, dans « Nouveau », cliquez « Caméra du téléphone » : la demande apparaîtra ici.",
+    "sending": "Envoi…",
+    "cardN": "Carte {{n}}"
   }
 }

@@ -85,24 +85,6 @@
   "tapToCopy": "المس قيمة لنسخها",
   "noResults": "لا توجد نتائج",
   "burstTitle": "كاميرا للحاسوب",
-  "burstHint": "صوّر البطاقات واحدة تلو الأخرى: تُرسل كل بطاقة فورًا وتظهر مباشرة على حاسوبك (الموقع ← «كاميرا الهاتف»، نفس الحساب).",
-  "burstShoot": "تصوير بطاقة",
-  "burstFrontReady": "تم تصوير الوجه",
-  "burstSendNow": "إرسال (الوجه فقط)",
-  "burstAddBack": "إضافة الظهر ثم الإرسال",
-  "burstRetake": "إعادة التصوير",
-  "burstCardN": "بطاقة {n}",
-  "burstDone": "تم التحليل — ظاهرة على الحاسوب",
-  "burstFailed": "فشل",
-  "burstProcessing": "جارٍ التحليل…",
-  "burstSending": "جارٍ الإرسال…",
-  "@burstCardN": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "burstPcAsks": "الحاسوب يطلب: {side}",
   "burstFront": "الوجه",
   "burstBack": "الظهر",
@@ -113,5 +95,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "burstWaitingPc": "في انتظار طلب من الحاسوب…",
+  "burstWaitingPcHint": "على الحاسوب، في «جديد»، انقر «كاميرا الهاتف»: سيظهر الطلب هنا."
 }

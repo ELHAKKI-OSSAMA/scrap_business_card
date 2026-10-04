@@ -85,24 +85,6 @@
   "tapToCopy": "Touchez une valeur pour la copier",
   "noResults": "Aucun résultat",
   "burstTitle": "Caméra pour le PC",
-  "burstHint": "Photographiez les cartes à la chaîne : chaque carte part tout de suite et s’affiche en direct sur votre PC (site web → « Caméra téléphone », même compte).",
-  "burstShoot": "Photographier une carte",
-  "burstFrontReady": "Recto pris",
-  "burstSendNow": "Envoyer (recto seul)",
-  "burstAddBack": "Ajouter le verso puis envoyer",
-  "burstRetake": "Reprendre",
-  "burstCardN": "Carte {n}",
-  "burstDone": "Analysée — visible sur le PC",
-  "burstFailed": "Échec",
-  "burstProcessing": "Analyse en cours…",
-  "burstSending": "Envoi…",
-  "@burstCardN": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "burstPcAsks": "Le PC demande : {side}",
   "burstFront": "le recto",
   "burstBack": "le verso",
@@ -113,5 +95,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "burstWaitingPc": "En attente d’une demande du PC…",
+  "burstWaitingPcHint": "Sur le PC, dans « Nouveau », cliquez « Caméra du téléphone » : la demande apparaîtra ici."
 }

@@ -281,42 +281,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get burstTitle => 'كاميرا للحاسوب';
 
   @override
-  String get burstHint =>
-      'صوّر البطاقات واحدة تلو الأخرى: تُرسل كل بطاقة فورًا وتظهر مباشرة على حاسوبك (الموقع ← «كاميرا الهاتف»، نفس الحساب).';
-
-  @override
-  String get burstShoot => 'تصوير بطاقة';
-
-  @override
-  String get burstFrontReady => 'تم تصوير الوجه';
-
-  @override
-  String get burstSendNow => 'إرسال (الوجه فقط)';
-
-  @override
-  String get burstAddBack => 'إضافة الظهر ثم الإرسال';
-
-  @override
-  String get burstRetake => 'إعادة التصوير';
-
-  @override
-  String burstCardN(int n) {
-    return 'بطاقة $n';
-  }
-
-  @override
-  String get burstDone => 'تم التحليل — ظاهرة على الحاسوب';
-
-  @override
-  String get burstFailed => 'فشل';
-
-  @override
-  String get burstProcessing => 'جارٍ التحليل…';
-
-  @override
-  String get burstSending => 'جارٍ الإرسال…';
-
-  @override
   String burstPcAsks(String side) {
     return 'الحاسوب يطلب: $side';
   }
@@ -329,4 +293,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get burstShootForPc => 'التصوير للحاسوب';
+
+  @override
+  String get burstWaitingPc => 'في انتظار طلب من الحاسوب…';
+
+  @override
+  String get burstWaitingPcHint =>
+      'على الحاسوب، في «جديد»، انقر «كاميرا الهاتف»: سيظهر الطلب هنا.';
 }

@@ -4,23 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../l10n/gen/app_localizations.dart';
 import '../api/api_client.dart';
 import '../app_state.dart';
 import '../sync/shrink.dart';
-import 'theme.dart';
 
-class _Sent {
-  _Sent(this.n);
-  final int n;
-  String status = 'sending'; // sending | processing | completed | failed
-  String? error;
-}
-
-/// "Phone as camera": shoot card after card; each one is uploaded and processed in the
-/// background and appears live on the PC (web → "Phone camera" page, same account).
+/// Phone side of "phone as camera": answers the PC's photo requests (web → New card → "Phone camera").
 class BurstScreen extends StatefulWidget {
   const BurstScreen({super.key});
   @override
@@ -28,9 +18,6 @@ class BurstScreen extends StatefulWidget {
 }
 
 class _BurstScreenState extends State<BurstScreen> {
-  static const _route = 'business-cards';
-  File? _front;
-  final List<_Sent> _sent = [];
   CaptureRequest? _req;
   bool _reqBusy = false;
   String? _reqError;
@@ -83,30 +70,6 @@ class _BurstScreenState extends State<BurstScreen> {
     return x == null ? null : File(x.path);
   }
 
-  Future<void> _send(File front, File? back) async {
-    final api = context.read<AppState>().api;
-    final state = context.read<AppState>();
-    final s = _Sent(_sent.length + 1);
-    setState(() {
-      _front = null;
-      _sent.insert(0, s);
-    });
-    try {
-      final doc = await api.createDocument(_route, clientRef: const Uuid().v4());
-      await api.uploadImage(_route, doc.id, 'front', await shrinkForUpload(front));
-      if (back != null) await api.uploadImage(_route, doc.id, 'back', await shrinkForUpload(back));
-      if (mounted) setState(() => s.status = 'processing');
-      final job = await api.process(_route, doc.id);
-      s.status = job.status == 'failed' ? 'failed' : 'completed';
-      s.error = job.errorMessage;
-      state.loadDocs();
-    } catch (e) {
-      s.status = 'failed';
-      s.error = '$e';
-    }
-    if (mounted) setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -141,67 +104,17 @@ class _BurstScreenState extends State<BurstScreen> {
           ),
           const SizedBox(height: 16),
         ],
-        Text(l.burstHint, style: theme.textTheme.bodyMedium),
-        const SizedBox(height: 16),
-        if (_front == null)
-          InkWell(
-            key: const Key('burst-shoot'),
-            borderRadius: BorderRadius.circular(24),
-            onTap: () async {
-              final f = await _shoot();
-              if (f != null) setState(() => _front = f);
-            },
-            child: Ink(
-              height: 180,
-              decoration: BoxDecoration(gradient: brandGradient, borderRadius: BorderRadius.circular(24)),
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Icon(Icons.photo_camera_rounded, size: 48, color: Colors.white),
-                const SizedBox(height: 8),
-                Text(l.burstShoot, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-              ]),
-            ),
-          )
-        else
+        if (_req == null)
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Row(children: [
-                  ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(_front!, width: 72, height: 46, fit: BoxFit.cover)),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(l.burstFrontReady, style: theme.textTheme.titleSmall)),
-                ]),
+              padding: const EdgeInsets.all(24),
+              child: Column(children: [
+                Icon(Icons.screen_share_outlined, size: 44, color: theme.colorScheme.primary),
                 const SizedBox(height: 12),
-                FilledButton.icon(onPressed: () => _send(_front!, null), icon: const Icon(Icons.send_rounded), label: Text(l.burstSendNow)),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    final b = await _shoot();
-                    if (b != null && _front != null) await _send(_front!, b);
-                  },
-                  icon: const Icon(Icons.flip_rounded),
-                  label: Text(l.burstAddBack),
-                ),
-                TextButton.icon(onPressed: () => setState(() => _front = null), icon: const Icon(Icons.replay_rounded), label: Text(l.burstRetake)),
+                Text(l.burstWaitingPc, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+                const SizedBox(height: 6),
+                Text(l.burstWaitingPcHint, style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
               ]),
-            ),
-          ),
-        const SizedBox(height: 16),
-        for (final s in _sent)
-          Card(
-            child: ListTile(
-              leading: switch (s.status) {
-                'completed' => const Icon(Icons.check_circle_rounded, color: Colors.green),
-                'failed' => Icon(Icons.error_rounded, color: theme.colorScheme.error),
-                _ => const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
-              },
-              title: Text(l.burstCardN(s.n)),
-              subtitle: Text(switch (s.status) {
-                'completed' => l.burstDone,
-                'failed' => s.error ?? l.burstFailed,
-                'processing' => l.burstProcessing,
-                _ => l.burstSending,
-              }, maxLines: 2, overflow: TextOverflow.ellipsis),
             ),
           ),
       ]),

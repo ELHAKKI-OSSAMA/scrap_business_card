@@ -11,10 +11,10 @@ const MAX_MB = 15;
 
 const coarsePointer = () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
 
-export function Dropzone({ onFiles, multiple, disabled, label, onPhone, phoneWaiting, onCancelPhone }: {
+export function Dropzone({ onFiles, multiple, disabled, label, onPhone, phoneWaiting, onCancelPhone, phoneWaitingText, cancelText }: {
   onFiles: (files: File[]) => void; multiple?: boolean; disabled?: boolean; label?: string;
   /** PC only: ask the signed-in phone to take the photo instead of picking a file. */
-  onPhone?: () => void; phoneWaiting?: boolean; onCancelPhone?: () => void;
+  onPhone?: () => void; phoneWaiting?: boolean; onCancelPhone?: () => void; phoneWaitingText?: string; cancelText?: string;
 }) {
   const { t } = useTranslation();
   const [over, setOver] = useState(false);
@@ -31,9 +31,9 @@ export function Dropzone({ onFiles, multiple, disabled, label, onPhone, phoneWai
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-accent bg-accent-soft p-6 text-center">
         <Smartphone className="size-8 animate-pulse text-accent-ink" aria-hidden />
-        <p className="font-medium text-ink">{t("upload.phoneWaiting")}</p>
+        <p className="font-medium text-ink">{phoneWaitingText ?? t("upload.phoneWaiting")}</p>
         <p className="text-xs text-ink-2">{t("upload.phoneWaitingHint")}</p>
-        <Button type="button" size="sm" variant="ghost" onClick={onCancelPhone}><X className="size-4" aria-hidden />{t("common.cancel")}</Button>
+        <Button type="button" size="sm" variant="ghost" onClick={onCancelPhone}><X className="size-4" aria-hidden />{cancelText ?? t("common.cancel")}</Button>
       </div>
     );
   }

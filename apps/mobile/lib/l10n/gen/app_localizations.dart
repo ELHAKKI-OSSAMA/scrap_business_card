@@ -610,72 +610,6 @@ abstract class AppLocalizations {
   /// **'Camera for the PC'**
   String get burstTitle;
 
-  /// No description provided for @burstHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Shoot cards one after another: each card is sent immediately and appears live on your PC (website → “Phone camera”, same account).'**
-  String get burstHint;
-
-  /// No description provided for @burstShoot.
-  ///
-  /// In en, this message translates to:
-  /// **'Photograph a card'**
-  String get burstShoot;
-
-  /// No description provided for @burstFrontReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Front captured'**
-  String get burstFrontReady;
-
-  /// No description provided for @burstSendNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Send (front only)'**
-  String get burstSendNow;
-
-  /// No description provided for @burstAddBack.
-  ///
-  /// In en, this message translates to:
-  /// **'Add the back, then send'**
-  String get burstAddBack;
-
-  /// No description provided for @burstRetake.
-  ///
-  /// In en, this message translates to:
-  /// **'Retake'**
-  String get burstRetake;
-
-  /// No description provided for @burstCardN.
-  ///
-  /// In en, this message translates to:
-  /// **'Card {n}'**
-  String burstCardN(int n);
-
-  /// No description provided for @burstDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Analysed — visible on the PC'**
-  String get burstDone;
-
-  /// No description provided for @burstFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get burstFailed;
-
-  /// No description provided for @burstProcessing.
-  ///
-  /// In en, this message translates to:
-  /// **'Analysing…'**
-  String get burstProcessing;
-
-  /// No description provided for @burstSending.
-  ///
-  /// In en, this message translates to:
-  /// **'Sending…'**
-  String get burstSending;
-
   /// No description provided for @burstPcAsks.
   ///
   /// In en, this message translates to:
@@ -699,6 +633,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photograph for the PC'**
   String get burstShootForPc;
+
+  /// No description provided for @burstWaitingPc.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a request from the PC…'**
+  String get burstWaitingPc;
+
+  /// No description provided for @burstWaitingPcHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On the PC, in “New”, click “Phone camera”: the request will appear here.'**
+  String get burstWaitingPcHint;
 }
 
 class _AppLocalizationsDelegate

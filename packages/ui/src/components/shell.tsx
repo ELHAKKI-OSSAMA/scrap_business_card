@@ -87,7 +87,8 @@ export function AppShell({ brand, children }: { brand: ProductBrand; children: R
     { to: "/", label: t("nav.dashboard"), end: true },
     { to: "/new", label: t("nav.new") },
     { to: "/history", label: t("nav.history") },
-    { to: "/phone", label: t("nav.phone") },
+    // phone side of "phone as camera": only useful on a touch device
+    ...(window.matchMedia?.("(pointer: coarse)").matches ? [{ to: "/phone", label: t("nav.phone") }] : []),
     { to: "/settings", label: t("nav.settings") },
   ];
   return (

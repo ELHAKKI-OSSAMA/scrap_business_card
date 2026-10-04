@@ -1,8 +1,8 @@
 import { Layers } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { Card, Dropzone, StatusBadge, productApi, useErrorMessage, uuid } from "@ocr/ui";
+import { Alert, Card, Dropzone, StatusBadge, captureApi, productApi, useErrorMessage, uuid } from "@ocr/ui";
 
 type Item = { name: string; id?: string; status: string; error?: string; pct?: number };
 
@@ -13,6 +13,64 @@ export function BatchUpload() {
   const [items, setItems] = useState<Item[]>([]);
   const api = productApi("business-cards");
   const update = (i: number, patch: Partial<Item>) => setItems((xs) => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const updateId = (id: string, patch: Partial<Item>) => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  // Background workers (non-sync deployments): refresh cards until their OCR finishes.
+  const inFlight = items.filter((x) => x.id && ["queued", "running", "processing"].includes(x.status)).map((x) => x.id!).join(",");
+  useEffect(() => {
+    if (!inFlight) return;
+    const h = window.setInterval(() => {
+      for (const id of inFlight.split(",")) void api.get(id).then((d) => updateId(id, { status: d.status }), () => {});
+    }, 3000);
+    return () => window.clearInterval(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inFlight]);
+
+  // Phone mode: one capture request after another until stopped; each photo becomes a card.
+  const [phone, setPhone] = useState<{ docId: string; reqId: string } | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const shots = useRef(0);
+  const askNext = async () => {
+    const doc = await api.create({ client_ref: uuid() });
+    const r = await captureApi.create(doc.id, "front");
+    setPhone({ docId: doc.id, reqId: r.id });
+  };
+  const startPhone = async () => {
+    setPhoneError(null);
+    try { await askNext(); } catch (e) { setPhoneError(errMsg(e)); }
+  };
+  const stopPhone = async () => {
+    const cur = phone;
+    setPhone(null);
+    if (!cur) return;
+    await captureApi.finish(cur.reqId, "cancel").catch(() => {});
+    await api.remove(cur.docId).catch(() => {}); // the empty record waiting for a photo
+  };
+  useEffect(() => {
+    if (!phone) return;
+    const h = window.setInterval(async () => {
+      try {
+        const r = await captureApi.get(phone.reqId);
+        if (r.status === "pending") return;
+        window.clearInterval(h);
+        if (r.status !== "done") { setPhone(null); return; }
+        shots.current += 1;
+        const id = phone.docId;
+        setItems((xs) => [...xs, { name: t("phone.cardN", { n: shots.current }), id, status: "queued" }]);
+        void api.process(id, {}).then(
+          (j) => updateId(id, { status: j.status === "completed" ? "completed" : j.status }),
+          (e) => updateId(id, { status: "failed", error: errMsg(e) }),
+        );
+        await askNext();
+      } catch (e) {
+        window.clearInterval(h);
+        setPhoneError(errMsg(e));
+        setPhone(null);
+      }
+    }, 2000);
+    return () => window.clearInterval(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone?.reqId]);
 
   const run = async (files: File[]) => {
     const start = items.length;
@@ -34,7 +92,9 @@ export function BatchUpload() {
     <Card className="flex flex-col gap-3 p-4">
       <h2 className="flex items-center gap-2 font-semibold"><Layers className="size-4" aria-hidden />{t("card.batch")}</h2>
       <p className="text-sm text-ink-2">{t("card.batchHint")}</p>
-      <Dropzone multiple onFiles={run} />
+      <Dropzone multiple onFiles={run} onPhone={startPhone} phoneWaiting={!!phone} onCancelPhone={stopPhone}
+        phoneWaitingText={t("card.batchPhoneWaiting", { n: shots.current })} cancelText={t("card.batchPhoneStop")} />
+      {phoneError && <Alert tone="danger">{phoneError}</Alert>}
       {items.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm">
           {items.map((it, i) => (

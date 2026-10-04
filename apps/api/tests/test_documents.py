@@ -36,7 +36,7 @@ def test_create_is_idempotent_with_client_ref(client, alice):
     b = client.post(BC, json={"client_ref": ref}, headers=alice["headers"])
     assert a.status_code == 201 and b.status_code == 200
     assert a.json()["id"] == b.json()["id"]
-    listing = client.get(BC, headers=alice["headers"]).json()
+    listing = client.get(BC, params={"status": "draft"}, headers=alice["headers"]).json()
     assert sum(1 for i in listing["items"] if i["id"] == a.json()["id"]) == 1
 
 
@@ -311,7 +311,7 @@ def test_favorites_bulk_export_and_delete(client, alice, bob):
     h = alice["headers"]
     r = client.patch(f"{BC}/{a}", json={"favorite": True}, headers=h)
     assert r.status_code == 200 and r.json()["favorite"] is True
-    favs = client.get(BC, params={"favorite": "true"}, headers=h).json()
+    favs = client.get(BC, params={"favorite": "true", "status": "draft"}, headers=h).json()
     assert [d["id"] for d in favs["items"]] == [a] and favs["items"][0]["favorite"] is True
     # export of a selection: only the selected documents of this workspace
     r = client.get(f"{BC}/export", params={"format": "json", "ids": f"{a},{b},{other}"}, headers=h)
@@ -320,7 +320,8 @@ def test_favorites_bulk_export_and_delete(client, alice, bob):
     # bulk delete never touches another workspace
     r = client.post(f"{BC}/bulk-delete", json={"ids": [a, b, other]}, headers=h)
     assert r.json() == {"deleted": 2}
-    assert [d["id"] for d in client.get(BC, headers=h).json()["items"]] == [c]
+    assert [d["id"] for d in client.get(BC, params={"status": "draft"}, headers=h).json()["items"]] == [c]
+    assert client.get(BC, headers=h).json()["items"] == []  # never-processed drafts stay out of history
     assert client.get(f"{BC}/{other}", headers=bob["headers"]).status_code == 200
 
 

@@ -185,6 +185,9 @@ def make_router(spec: ProductSpec) -> APIRouter:
                 conds.append(Document.search_text.contains(term, autoescape=True))
         if status_:
             conds.append(Document.status == status_)
+        else:
+            # cards still being prepared on the New page (images added, OCR not launched) are not history yet
+            conds.append(Document.status.not_in(("draft", "ready")))
         if review_status:
             conds.append(Document.review_status == review_status)
         if favorite is not None:

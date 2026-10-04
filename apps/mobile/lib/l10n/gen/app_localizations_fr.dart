@@ -285,42 +285,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get burstTitle => 'Caméra pour le PC';
 
   @override
-  String get burstHint =>
-      'Photographiez les cartes à la chaîne : chaque carte part tout de suite et s’affiche en direct sur votre PC (site web → « Caméra téléphone », même compte).';
-
-  @override
-  String get burstShoot => 'Photographier une carte';
-
-  @override
-  String get burstFrontReady => 'Recto pris';
-
-  @override
-  String get burstSendNow => 'Envoyer (recto seul)';
-
-  @override
-  String get burstAddBack => 'Ajouter le verso puis envoyer';
-
-  @override
-  String get burstRetake => 'Reprendre';
-
-  @override
-  String burstCardN(int n) {
-    return 'Carte $n';
-  }
-
-  @override
-  String get burstDone => 'Analysée — visible sur le PC';
-
-  @override
-  String get burstFailed => 'Échec';
-
-  @override
-  String get burstProcessing => 'Analyse en cours…';
-
-  @override
-  String get burstSending => 'Envoi…';
-
-  @override
   String burstPcAsks(String side) {
     return 'Le PC demande : $side';
   }
@@ -333,4 +297,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get burstShootForPc => 'Photographier pour le PC';
+
+  @override
+  String get burstWaitingPc => 'En attente d’une demande du PC…';
+
+  @override
+  String get burstWaitingPcHint =>
+      'Sur le PC, dans « Nouveau », cliquez « Caméra du téléphone » : la demande apparaîtra ici.';
 }
