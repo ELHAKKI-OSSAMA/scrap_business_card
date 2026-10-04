@@ -83,5 +83,24 @@
   "favorite": "Favori",
   "hello": "Bonjour {name}",
   "tapToCopy": "Touchez une valeur pour la copier",
-  "noResults": "Aucun résultat"
+  "noResults": "Aucun résultat",
+  "burstTitle": "Caméra pour le PC",
+  "burstHint": "Photographiez les cartes à la chaîne : chaque carte part tout de suite et s’affiche en direct sur votre PC (site web → « Caméra téléphone », même compte).",
+  "burstShoot": "Photographier une carte",
+  "burstFrontReady": "Recto pris",
+  "burstSendNow": "Envoyer (recto seul)",
+  "burstAddBack": "Ajouter le verso puis envoyer",
+  "burstRetake": "Reprendre",
+  "burstCardN": "Carte {n}",
+  "burstDone": "Analysée — visible sur le PC",
+  "burstFailed": "Échec",
+  "burstProcessing": "Analyse en cours…",
+  "burstSending": "Envoi…",
+  "@burstCardN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

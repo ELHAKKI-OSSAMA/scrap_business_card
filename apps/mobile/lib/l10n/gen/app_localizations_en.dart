@@ -279,4 +279,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noResults => 'No results';
+
+  @override
+  String get burstTitle => 'Camera for the PC';
+
+  @override
+  String get burstHint =>
+      'Shoot cards one after another: each card is sent immediately and appears live on your PC (website → “Phone camera”, same account).';
+
+  @override
+  String get burstShoot => 'Photograph a card';
+
+  @override
+  String get burstFrontReady => 'Front captured';
+
+  @override
+  String get burstSendNow => 'Send (front only)';
+
+  @override
+  String get burstAddBack => 'Add the back, then send';
+
+  @override
+  String get burstRetake => 'Retake';
+
+  @override
+  String burstCardN(int n) {
+    return 'Card $n';
+  }
+
+  @override
+  String get burstDone => 'Analysed — visible on the PC';
+
+  @override
+  String get burstFailed => 'Failed';
+
+  @override
+  String get burstProcessing => 'Analysing…';
+
+  @override
+  String get burstSending => 'Sending…';
 }

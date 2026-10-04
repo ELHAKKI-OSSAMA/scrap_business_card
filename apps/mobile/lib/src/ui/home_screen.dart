@@ -12,6 +12,7 @@ import '../modules/product.dart';
 import '../sync/sync_service.dart';
 import 'capture_screen.dart';
 import 'review_screen.dart';
+import 'burst_screen.dart';
 import 'settings_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -64,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
             busy: busy,
             onRefresh: busy ? null : state.refreshAll,
             onSettings: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onBurst: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BurstScreen())),
           )),
           if (!state.online || state.docsError == 'network') const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 0), child: OfflineBanner())),
           SliverToBoxAdapter(
@@ -110,12 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.greeting, required this.title, required this.total, required this.toReview, required this.busy, required this.onRefresh, required this.onSettings});
+  const _Header({required this.greeting, required this.title, required this.total, required this.toReview, required this.busy, required this.onRefresh, required this.onSettings, required this.onBurst});
   final String greeting, title;
   final int total, toReview;
   final bool busy;
   final VoidCallback? onRefresh;
   final VoidCallback onSettings;
+  final VoidCallback onBurst;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +143,7 @@ class _Header extends StatelessWidget {
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.refresh_rounded, color: Colors.white),
           ),
+          IconButton(key: const Key('open-burst'), tooltip: l.burstTitle, onPressed: onBurst, icon: const Icon(Icons.screen_share_outlined, color: Colors.white)),
           IconButton(tooltip: l.settings, onPressed: onSettings, icon: const Icon(Icons.settings_outlined, color: Colors.white)),
         ]),
         const SizedBox(height: 18),

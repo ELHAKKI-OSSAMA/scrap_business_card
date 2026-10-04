@@ -125,5 +125,24 @@
     }
   },
   "tapToCopy": "Tap a value to copy it",
-  "noResults": "No results"
+  "noResults": "No results",
+  "burstTitle": "Camera for the PC",
+  "burstHint": "Shoot cards one after another: each card is sent immediately and appears live on your PC (website → “Phone camera”, same account).",
+  "burstShoot": "Photograph a card",
+  "burstFrontReady": "Front captured",
+  "burstSendNow": "Send (front only)",
+  "burstAddBack": "Add the back, then send",
+  "burstRetake": "Retake",
+  "burstCardN": "Card {n}",
+  "burstDone": "Analysed — visible on the PC",
+  "burstFailed": "Failed",
+  "burstProcessing": "Analysing…",
+  "burstSending": "Sending…",
+  "@burstCardN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

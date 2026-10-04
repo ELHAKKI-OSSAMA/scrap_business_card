@@ -603,6 +603,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No results'**
   String get noResults;
+
+  /// No description provided for @burstTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera for the PC'**
+  String get burstTitle;
+
+  /// No description provided for @burstHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoot cards one after another: each card is sent immediately and appears live on your PC (website → “Phone camera”, same account).'**
+  String get burstHint;
+
+  /// No description provided for @burstShoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph a card'**
+  String get burstShoot;
+
+  /// No description provided for @burstFrontReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Front captured'**
+  String get burstFrontReady;
+
+  /// No description provided for @burstSendNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send (front only)'**
+  String get burstSendNow;
+
+  /// No description provided for @burstAddBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the back, then send'**
+  String get burstAddBack;
+
+  /// No description provided for @burstRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get burstRetake;
+
+  /// No description provided for @burstCardN.
+  ///
+  /// In en, this message translates to:
+  /// **'Card {n}'**
+  String burstCardN(int n);
+
+  /// No description provided for @burstDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysed — visible on the PC'**
+  String get burstDone;
+
+  /// No description provided for @burstFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get burstFailed;
+
+  /// No description provided for @burstProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysing…'**
+  String get burstProcessing;
+
+  /// No description provided for @burstSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get burstSending;
 }
 
 class _AppLocalizationsDelegate
