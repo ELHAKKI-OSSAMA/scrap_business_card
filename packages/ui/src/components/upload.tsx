@@ -1,4 +1,4 @@
-import { Camera, ImagePlus, RefreshCw, Trash2 } from "lucide-react";
+import { Camera, ImagePlus, Monitor, RefreshCw, Smartphone, Trash2, X } from "lucide-react";
 import { useRef, useState, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { ImageInfo, Side } from "@ocr/shared-types";
@@ -9,7 +9,13 @@ import { Button, cx } from "./primitives";
 export const ACCEPT = "image/jpeg,image/png,image/webp,image/tiff";
 const MAX_MB = 15;
 
-export function Dropzone({ onFiles, multiple, disabled, label }: { onFiles: (files: File[]) => void; multiple?: boolean; disabled?: boolean; label?: string }) {
+const coarsePointer = () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
+
+export function Dropzone({ onFiles, multiple, disabled, label, onPhone, phoneWaiting, onCancelPhone }: {
+  onFiles: (files: File[]) => void; multiple?: boolean; disabled?: boolean; label?: string;
+  /** PC only: ask the signed-in phone to take the photo instead of picking a file. */
+  onPhone?: () => void; phoneWaiting?: boolean; onCancelPhone?: () => void;
+}) {
   const { t } = useTranslation();
   const [over, setOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -21,6 +27,17 @@ export function Dropzone({ onFiles, multiple, disabled, label }: { onFiles: (fil
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
     if (files.length) onFiles(multiple ? files : files.slice(0, 1));
   };
+  if (phoneWaiting) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-accent bg-accent-soft p-6 text-center">
+        <Smartphone className="size-8 animate-pulse text-accent-ink" aria-hidden />
+        <p className="font-medium text-ink">{t("upload.phoneWaiting")}</p>
+        <p className="text-xs text-ink-2">{t("upload.phoneWaitingHint")}</p>
+        <Button type="button" size="sm" variant="ghost" onClick={onCancelPhone}><X className="size-4" aria-hidden />{t("common.cancel")}</Button>
+      </div>
+    );
+  }
+  const phoneChoice = onPhone && !coarsePointer();
   return (
     <div
       onDragOver={(e) => { e.preventDefault(); setOver(true); }}
@@ -34,7 +51,14 @@ export function Dropzone({ onFiles, multiple, disabled, label }: { onFiles: (fil
         {t("upload.drop")}{" "}
         <button type="button" className="font-medium text-accent-ink underline" onClick={() => fileRef.current?.click()} disabled={disabled}>{t("upload.browse")}</button>
       </p>
-      <Button type="button" size="sm" onClick={() => camRef.current?.click()} disabled={disabled}><Camera className="size-4" aria-hidden />{t("upload.camera")}</Button>
+      {phoneChoice ? (
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button type="button" size="sm" variant="secondary" onClick={() => fileRef.current?.click()} disabled={disabled}><Monitor className="size-4" aria-hidden />{t("upload.fromPc")}</Button>
+          <Button type="button" size="sm" onClick={onPhone} disabled={disabled}><Smartphone className="size-4" aria-hidden />{t("upload.fromPhone")}</Button>
+        </div>
+      ) : (
+        <Button type="button" size="sm" onClick={() => camRef.current?.click()} disabled={disabled}><Camera className="size-4" aria-hidden />{t("upload.camera")}</Button>
+      )}
       <p className="text-xs text-ink-3">{t("upload.formats", { mb: MAX_MB })}</p>
       <input ref={fileRef} type="file" accept={ACCEPT} multiple={multiple} className="sr-only" tabIndex={-1} aria-hidden
         onChange={(e) => { const f = Array.from(e.target.files ?? []); if (f.length) onFiles(f); e.target.value = ""; }} />
@@ -45,8 +69,9 @@ export function Dropzone({ onFiles, multiple, disabled, label }: { onFiles: (fil
   );
 }
 
-export function UploadSlot({ route, side, image, optional, progress, onFile, onRemove, disabled }: {
+export function UploadSlot({ route, side, image, optional, progress, onFile, onRemove, disabled, onPhone, phoneWaiting, onCancelPhone }: {
   route: ProductRoute; side: Side; image?: ImageInfo; optional?: boolean; progress?: number | null; onFile: (f: File) => void; onRemove?: () => void; disabled?: boolean;
+  onPhone?: () => void; phoneWaiting?: boolean; onCancelPhone?: () => void;
 }) {
   const { t } = useTranslation();
   const { url } = useAuthedImage(route, image ? `${image.url.replace("variant=original", "variant=thumb")}` : null);
@@ -68,7 +93,7 @@ export function UploadSlot({ route, side, image, optional, progress, onFile, onR
           <input ref={inputRef} type="file" accept={ACCEPT} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
         </div>
       ) : (
-        <Dropzone onFiles={(f) => onFile(f[0])} disabled={disabled} />
+        <Dropzone onFiles={(f) => onFile(f[0])} disabled={disabled} onPhone={onPhone} phoneWaiting={phoneWaiting} onCancelPhone={onCancelPhone} />
       )}
       {progress !== null && progress !== undefined && (
         <div role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={t("upload.uploading", { pct: progress })} className="h-2 overflow-hidden rounded-full bg-surface-2">

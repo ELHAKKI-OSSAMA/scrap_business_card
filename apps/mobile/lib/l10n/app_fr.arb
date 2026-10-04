@@ -102,5 +102,16 @@
         "type": "int"
       }
     }
+  },
+  "burstPcAsks": "Le PC demande : {side}",
+  "burstFront": "le recto",
+  "burstBack": "le verso",
+  "burstShootForPc": "Photographier pour le PC",
+  "@burstPcAsks": {
+    "placeholders": {
+      "side": {
+        "type": "String"
+      }
+    }
   }
 }

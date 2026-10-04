@@ -80,6 +80,15 @@ export type ProductRoute = "business-cards";
 
 export interface ListParams { q?: string; status?: string; review_status?: string; language?: string; favorite?: string; page?: number; page_size?: number; sort?: string }
 
+export interface CaptureRequest { id: string; document_id: string; side: Side; status: "pending" | "done" | "cancelled"; route: ProductRoute }
+/** Phone-as-camera: the PC asks the same user's phone to photograph one side of a document. */
+export const captureApi = {
+  create: (document_id: string, side: Side) => json<CaptureRequest>("/capture-requests", { method: "POST", body: JSON.stringify({ document_id, side }) }),
+  pending: () => json<CaptureRequest | null>("/capture-requests/pending"),
+  get: (id: string) => json<CaptureRequest>(`/capture-requests/${id}`),
+  finish: (id: string, action: "done" | "cancel") => json<CaptureRequest>(`/capture-requests/${id}/${action}`, { method: "POST" }),
+};
+
 export function productApi(route: ProductRoute) {
   const base = `/${route}`;
   return {

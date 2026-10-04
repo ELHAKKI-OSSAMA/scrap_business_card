@@ -144,5 +144,16 @@
         "type": "int"
       }
     }
+  },
+  "burstPcAsks": "The PC is asking for: {side}",
+  "burstFront": "the front",
+  "burstBack": "the back",
+  "burstShootForPc": "Photograph for the PC",
+  "@burstPcAsks": {
+    "placeholders": {
+      "side": {
+        "type": "String"
+      }
+    }
   }
 }

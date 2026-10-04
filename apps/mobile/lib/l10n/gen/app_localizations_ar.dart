@@ -315,4 +315,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get burstSending => 'جارٍ الإرسال…';
+
+  @override
+  String burstPcAsks(String side) {
+    return 'الحاسوب يطلب: $side';
+  }
+
+  @override
+  String get burstFront => 'الوجه';
+
+  @override
+  String get burstBack => 'الظهر';
+
+  @override
+  String get burstShootForPc => 'التصوير للحاسوب';
 }

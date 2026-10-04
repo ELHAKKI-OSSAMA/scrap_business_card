@@ -102,5 +102,16 @@
         "type": "int"
       }
     }
+  },
+  "burstPcAsks": "الحاسوب يطلب: {side}",
+  "burstFront": "الوجه",
+  "burstBack": "الظهر",
+  "burstShootForPc": "التصوير للحاسوب",
+  "@burstPcAsks": {
+    "placeholders": {
+      "side": {
+        "type": "String"
+      }
+    }
   }
 }

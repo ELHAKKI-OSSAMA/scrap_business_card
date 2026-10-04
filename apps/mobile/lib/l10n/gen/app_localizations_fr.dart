@@ -319,4 +319,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get burstSending => 'Envoi…';
+
+  @override
+  String burstPcAsks(String side) {
+    return 'Le PC demande : $side';
+  }
+
+  @override
+  String get burstFront => 'le recto';
+
+  @override
+  String get burstBack => 'le verso';
+
+  @override
+  String get burstShootForPc => 'Photographier pour le PC';
 }

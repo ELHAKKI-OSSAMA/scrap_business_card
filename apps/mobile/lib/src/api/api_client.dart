@@ -48,6 +48,18 @@ class DocSummary {
   String get searchText => [title, ...summary.values.whereType<String>()].whereType<String>().join(' ').toLowerCase();
 }
 
+class CaptureRequest {
+  CaptureRequest(Map<String, dynamic> j)
+      : id = j['id'] as String,
+        documentId = j['document_id'] as String,
+        side = j['side'] as String,
+        route = (j['route'] as String?) ?? 'business-cards';
+  final String id;
+  final String documentId;
+  final String side;
+  final String route;
+}
+
 class JobStatus {
   JobStatus(this.id, this.status, {this.errorCode, this.errorMessage});
   final String id;
@@ -238,6 +250,17 @@ class HttpOcrApi implements OcrApi {
     final r = await _authed((h) => _client.post(_u('/$route/$id/process'), headers: h, body: '{}'));
     final j = _json(r);
     return JobStatus(j['job_id'] as String, j['status'] as String);
+  }
+
+  /// Phone-as-camera: the photo the PC is currently asking for, if any.
+  Future<CaptureRequest?> pendingCapture() async {
+    final r = await _authed((h) => _client.get(_u('/capture-requests/pending'), headers: h));
+    final j = jsonDecode(utf8.decode(r.bodyBytes));
+    return j == null ? null : CaptureRequest(j as Map<String, dynamic>);
+  }
+
+  Future<void> finishCapture(String id, {bool done = true}) async {
+    await _authed((h) => _client.post(_u('/capture-requests/$id/${done ? 'done' : 'cancel'}'), headers: h, body: '{}'));
   }
 
   @override

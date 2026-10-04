@@ -13,7 +13,7 @@ from app.config import get_settings
 from app.errors import install_error_handlers
 from app.observability import RequestContextMiddleware, configure_logging
 from app.products import BUSINESS_CARD
-from app.routers import auth, system
+from app.routers import auth, capture, system
 from app.routers.documents import make_router
 
 DESCRIPTION = """
@@ -51,6 +51,7 @@ def create_app() -> FastAPI:
     install_error_handlers(app)
     app.include_router(system.router, prefix=s.api_prefix)
     app.include_router(auth.router, prefix=s.api_prefix)
+    app.include_router(capture.router, prefix=s.api_prefix)
     app.include_router(make_router(BUSINESS_CARD), prefix=s.api_prefix)
     return app
 

@@ -115,7 +115,13 @@
     "replace": "Remplacer",
     "optional": "facultatif",
     "remove": "Retirer l'image",
-    "required": "Ajoutez au moins une image."
+    "required": "Ajoutez au moins une image.",
+    "fromPc": "Fichier du PC",
+    "fromPhone": "Caméra du téléphone",
+    "phoneWaiting": "Prenez la photo avec votre téléphone…",
+    "phoneWaitingHint": "Sur le téléphone (même compte) : app → « Caméra pour le PC », ou site → « Caméra téléphone ». La photo apparaîtra ici.",
+    "pcAsks": "Le PC demande : {{side}}",
+    "shootForPc": "Photographier pour le PC"
   },
   "process": {
     "run": "Lancer l'OCR",
@@ -447,6 +453,7 @@
     "receiveHint": "Sur votre téléphone, connecté au même compte, ouvrez cette adresse (ou le menu « Caméra téléphone ») :",
     "autoOpen": "Ouvrir automatiquement chaque carte analysée",
     "waiting": "En attente d’une carte…",
-    "newCard": "Nouvelle carte"
+    "newCard": "Nouvelle carte",
+    "sending": "Envoi…"
   }
 }

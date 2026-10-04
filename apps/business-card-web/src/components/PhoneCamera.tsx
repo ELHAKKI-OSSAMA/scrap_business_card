@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import type { DocumentSummary } from "@ocr/shared-types";
-import { Alert, Bidi, Button, Card, StatusBadge, cx, productApi, useErrorMessage, uuid } from "@ocr/ui";
+import { Alert, Bidi, Button, Card, StatusBadge, captureApi, cx, productApi, useErrorMessage, uuid, type CaptureRequest } from "@ocr/ui";
 
 const api = productApi("business-cards");
 const isPhone = () => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 900;
@@ -43,6 +43,33 @@ function Sender() {
   const [pending, setPending] = useState<File | null>(null);
   const [sent, setSent] = useState<Sent[]>([]);
   const upd = (key: string, p: Partial<Sent>) => setSent((xs) => xs.map((x) => (x.key === key ? { ...x, ...p } : x)));
+  const reqInput = useRef<HTMLInputElement>(null);
+  const [req, setReq] = useState<CaptureRequest | null>(null);
+  const [reqBusy, setReqBusy] = useState(false);
+  const [reqError, setReqError] = useState<string | null>(null);
+
+  // The PC may ask for a specific photo (New card → "Phone camera"): poll for it.
+  useEffect(() => {
+    let stop = false;
+    const tick = async () => { try { const r = await captureApi.pending(); if (!stop) setReq(r); } catch { /* offline: retry */ } };
+    void tick();
+    const h = window.setInterval(() => { if (!document.hidden) void tick(); }, 2500);
+    return () => { stop = true; window.clearInterval(h); };
+  }, []);
+  const answer = async (f: File) => {
+    if (!req) return;
+    setReqBusy(true);
+    setReqError(null);
+    try {
+      await productApi(req.route).upload(req.document_id, req.side, f);
+      await captureApi.finish(req.id, "done");
+      setReq(null);
+    } catch (e) {
+      setReqError(errMsg(e));
+    } finally {
+      setReqBusy(false);
+    }
+  };
 
   // Runs in the background so the user can shoot the next card straight away.
   const send = async (f: File, b: File | null) => {
@@ -65,6 +92,16 @@ function Sender() {
 
   return (
     <>
+      <input ref={reqInput} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} aria-hidden
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void answer(f); }} />
+      {req && (
+        <Card className="flex flex-col gap-3 border-2 border-accent p-4">
+          <p className="font-semibold">{t("upload.pcAsks", { side: t(`upload.${req.side}`) })}</p>
+          <Button onClick={() => reqInput.current?.click()} disabled={reqBusy}><Camera className="size-4" aria-hidden />{reqBusy ? t("phone.sending") : t("upload.shootForPc")}</Button>
+          {reqError && <Alert tone="danger">{reqError}</Alert>}
+          <Button variant="ghost" onClick={() => { void captureApi.finish(req.id, "cancel").catch(() => {}); setReq(null); }}>{t("common.cancel")}</Button>
+        </Card>
+      )}
       <p className="text-sm text-ink-2">{t("phone.sendHint")}</p>
       <input ref={front} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} aria-hidden
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) setPending(f); }} />

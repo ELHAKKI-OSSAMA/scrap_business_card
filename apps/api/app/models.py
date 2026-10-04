@@ -201,3 +201,15 @@ class AuditEvent(Base):
     ip: Mapped[str | None] = mapped_column(String(64))
     details: Mapped[dict | None] = mapped_column(JsonType)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class CaptureRequest(Base):
+    """The PC asks the signed-in phone to photograph one side of a document ("phone as camera")."""
+
+    __tablename__ = "capture_requests"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
+    side: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending | done | cancelled
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

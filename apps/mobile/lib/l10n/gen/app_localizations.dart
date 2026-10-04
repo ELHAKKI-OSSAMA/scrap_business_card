@@ -675,6 +675,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sending…'**
   String get burstSending;
+
+  /// No description provided for @burstPcAsks.
+  ///
+  /// In en, this message translates to:
+  /// **'The PC is asking for: {side}'**
+  String burstPcAsks(String side);
+
+  /// No description provided for @burstFront.
+  ///
+  /// In en, this message translates to:
+  /// **'the front'**
+  String get burstFront;
+
+  /// No description provided for @burstBack.
+  ///
+  /// In en, this message translates to:
+  /// **'the back'**
+  String get burstBack;
+
+  /// No description provided for @burstShootForPc.
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph for the PC'**
+  String get burstShootForPc;
 }
 
 class _AppLocalizationsDelegate

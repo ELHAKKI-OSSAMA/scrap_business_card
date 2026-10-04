@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { DocumentOut, DocumentSummary, FieldChange, Side } from "@ocr/shared-types";
-import { accountApi, productApi, type ProductRoute } from "../lib/api";
+import { accountApi, captureApi, productApi, type ProductRoute } from "../lib/api";
 import { formatDate, formatDateTime, formatNumber, uuid } from "../lib/format";
 import { useDocument, useErrorMessage } from "../lib/hooks";
 import { Alert, Bidi, Button, Card, ConfirmDialog, EmptyState, ReviewBadge, Spinner, StatusBadge, cx, useToast } from "./primitives";
@@ -266,6 +266,31 @@ export function NewDocumentPage({ ui, extraFields }: { ui: ProductUi; extraField
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [phoneReq, setPhoneReq] = useState<{ id: string; side: Side } | null>(null);
+
+  // Waiting for the phone: poll the request; once done, reload the document to show the photo.
+  useEffect(() => {
+    if (!phoneReq || !doc) return;
+    const h = window.setInterval(async () => {
+      try {
+        const r = await captureApi.get(phoneReq.id);
+        if (r.status === "pending") return;
+        setPhoneReq(null);
+        if (r.status === "done") setDoc(await api.get(doc.id));
+      } catch (e) { setError(errMsg(e)); setPhoneReq(null); }
+    }, 2000);
+    return () => window.clearInterval(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phoneReq, doc?.id]);
+  const askPhone = async (side: Side) => {
+    setError(null);
+    try {
+      const d = await ensureDoc();
+      const r = await captureApi.create(d.id, side);
+      setPhoneReq({ id: r.id, side });
+    } catch (e) { setError(errMsg(e)); }
+  };
+  const cancelPhone = () => { if (phoneReq) void captureApi.finish(phoneReq.id, "cancel").catch(() => {}); setPhoneReq(null); };
 
   const ensureDoc = async () => {
     if (doc) return doc;
@@ -320,7 +345,8 @@ export function NewDocumentPage({ ui, extraFields }: { ui: ProductUi; extraField
       <div className={cx("grid gap-4", ui.sides.length > 1 && "md:grid-cols-2")}>
         {ui.sides.map((s) => (
           <UploadSlot key={s.side} route={ui.route} side={s.side} optional={s.optional} image={doc?.images.find((i) => i.side === s.side)}
-            progress={progress[s.side]} onFile={(f) => upload(s.side, f)} onRemove={() => remove(s.side)} disabled={running} />
+            progress={progress[s.side]} onFile={(f) => upload(s.side, f)} onRemove={() => remove(s.side)} disabled={running || (!!phoneReq && phoneReq.side !== s.side)}
+            onPhone={() => askPhone(s.side)} phoneWaiting={phoneReq?.side === s.side} onCancelPhone={cancelPhone} />
         ))}
       </div>
       {error && <Alert tone="danger">{error}</Alert>}
